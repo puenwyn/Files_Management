@@ -41,4 +41,40 @@ export class AppConfigService {
     get DATABASE_URL(): string {
         return this.configService.getOrThrow<EnvSchemaType['DATABASE_URL']>('DATABASE_URL');
     }
+
+    get MAIL_HOST(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MAIL_HOST']>('MAIL_HOST');
+    }
+
+    get MAIL_PORT(): number {
+        return this.configService.getOrThrow<EnvSchemaType['MAIL_PORT']>('MAIL_PORT');
+    }
+
+    get MAIL_SECURE(): boolean {
+        return this.configService.getOrThrow<EnvSchemaType['MAIL_SECURE']>('MAIL_SECURE');
+    }
+
+    get MAIL_USER(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MAIL_USER']>('MAIL_USER');
+    }
+
+    get MAIL_PASSWORD(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MAIL_PASSWORD']>('MAIL_PASSWORD');
+    }
+
+    get REDIS_HOST(): string {
+        return this.configService.getOrThrow<EnvSchemaType['REDIS_HOST']>("REDIS_HOST");
+    }
+
+    get REDIS_PORT(): number {
+        return this.configService.getOrThrow<EnvSchemaType['REDIS_PORT']>("REDIS_PORT");
+    }
+
+    get REDIS_PASSWORD(): string | undefined {
+        return this.configService.get<EnvSchemaType['REDIS_PASSWORD']>("REDIS_PASSWORD");
+    }
+
+    // get MAIL_FROM(): string {
+    //     return this.configService.getOrThrow<EnvSchemaType['MAIL_FROM']>('MAIL_FROM');
+    // }
 }

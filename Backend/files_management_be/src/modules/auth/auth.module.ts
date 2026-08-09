@@ -6,6 +6,11 @@ import { ConfigService } from "@nestjs/config";
 import { UserModule } from "../user/user.module";
 import { JwtStrategy } from "./strategy/jwt.strategy";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { RefreshTokenModule } from "../refresh-token/refresh-token.module";
+import { RefreshStrategy } from "./strategy/refresh-jwt.strategy";
+import { MailModule } from "../mail/mail.module";
+import { PasswordResetTokenModule } from "../password-reset/password-reset-token.module";
+import { RedisModule } from "../redis/redis.module";
 
 @Module({
     imports: [
@@ -18,10 +23,14 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
                 },
             }),
         }),
-        UserModule
+        UserModule,
+        RefreshTokenModule,
+        MailModule,
+        PasswordResetTokenModule,
+        RedisModule
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, JwtAuthGuard],
+    providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshStrategy],
     exports: [JwtModule]
 })
 export class AuthModule { }

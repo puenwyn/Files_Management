@@ -11,6 +11,16 @@ export const EnvSchema = z.object({
     DB_USERNAME: z.string(),
     DB_PASSWORD: z.string(),
     DATABASE_URL: z.string(),
+
+    MAIL_HOST: z.string(),
+    MAIL_PORT: z.coerce.number(),
+    MAIL_SECURE: z.string().transform((value) => value.toLowerCase() === "true"),
+    MAIL_USER: z.string().email(),
+    MAIL_PASSWORD: z.string(),
+
+    REDIS_HOST: z.string().default("localhost"),
+    REDIS_PORT: z.coerce.number().default(6379),
+    REDIS_PASSWORD: z.string().optional(),
 });
 
 export type EnvSchemaType = z.infer<typeof EnvSchema>
