@@ -9,8 +9,8 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RefreshTokenModule } from "../refresh-token/refresh-token.module";
 import { RefreshStrategy } from "./strategy/refresh-jwt.strategy";
 import { MailModule } from "../mail/mail.module";
-import { PasswordResetTokenModule } from "../password-reset/password-reset-token.module";
 import { RedisModule } from "../redis/redis.module";
+import { DriveModule } from "../drive/drive.module";
 
 @Module({
     imports: [
@@ -26,8 +26,8 @@ import { RedisModule } from "../redis/redis.module";
         UserModule,
         RefreshTokenModule,
         MailModule,
-        PasswordResetTokenModule,
-        RedisModule
+        RedisModule,
+        DriveModule
     ],
     controllers: [AuthController],
     providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshStrategy],

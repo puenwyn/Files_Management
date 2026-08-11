@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ACL" ADD COLUMN     "isOwner" BOOLEAN NOT NULL DEFAULT false;

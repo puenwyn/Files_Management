@@ -1,0 +1,110 @@
+import { Body, Controller, Get, HttpStatus, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { FolderService } from "./folder.service";
+import { ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { CreateFolderDTO } from "./dtos/create-folder.dto";
+import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RenameFolderDTO } from "./dtos/rename-folder.dto";
+import { HideFolderDTO } from "./dtos/hide-folder.dto";
+import { ShowFolderDTO } from "./dtos/show-folder.dto";
+
+@Controller("folder")
+export class FolderController {
+    constructor(private readonly folderService: FolderService) { }
+
+    @Get("drive/:id")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Get root folders of drive"
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: "Get root folders successfully!" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Drive is not found or it's your own!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    async getDriveFolders(
+        @Param("id") id: string,
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.folderService.getDriveFolders(req.user.id, id);
+    }
+
+    @Get(":id/children")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Get root folders of drive"
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: "Get root folders successfully!" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Folder is not found!" })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "You are forbidden!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    async getFolderChildrens(
+        @Param("id") id: string,
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.folderService.getFolderChildrens(id, req.user.id);
+    }
+
+    @Post()
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Create new folder for user"
+    })
+    @ApiResponse({ status: HttpStatus.CREATED, description: "Create folder successfully!" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Drive is not found or it's your own!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    async createFolder(
+        @Body() dto: CreateFolderDTO,
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.folderService.createFolder(req.user.id, dto.driveId, dto.parentFolderId, dto.folderName)
+    }
+
+    @Patch(":id/rename")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Edit folder name"
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: "Rename folder successfully!" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Drive is not found or it's your own!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    async renameFolder(
+        @Param("id") id: string,
+        @Body() dto: RenameFolderDTO,
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.folderService.renameFolder(req.user.id, id, dto.newFolderName);
+    }
+
+    @Patch(":id/hidden")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Restore folder"
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: "Hidden folder successfully!" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Folder is not found!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    async hideFolder(
+        @Param("id") id: string,
+        @Body() dto: HideFolderDTO,
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.folderService.hideFolder(req.user.id, id, dto.hashPassword);
+    }
+
+    @Patch(":id/show")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Restore folder"
+    })
+    @ApiResponse({ status: HttpStatus.OK, description: "Show folder successfully!" })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Folder is not found!" })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Password is not set!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Password is not valid!" })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+    async showFolder(
+        @Param("id") id: string,
+        @Body() dto: ShowFolderDTO,
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.folderService.showFolder(req.user.id, id, dto.password);
+    }
+}

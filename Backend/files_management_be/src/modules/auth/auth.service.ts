@@ -11,6 +11,7 @@ import { RefreshToken } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { MailService } from "../mail/mail.service";
 import { RedisService } from "../redis/redis.service";
+import { DriveService } from "../drive/drive.service";
 
 @Injectable()
 export class AuthService {
@@ -19,7 +20,8 @@ export class AuthService {
         private readonly refreshTokenService: RefreshTokenService,
         private readonly jwtService: JwtService,
         private readonly mailService: MailService,
-        private readonly redisService: RedisService
+        private readonly redisService: RedisService,
+        private readonly driveService: DriveService
     ) { }
 
     private async generateAccessToken(userId: string) {
@@ -51,12 +53,24 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-        await this.userService.create({
+        const user = await this.userService.create({
             fullName: dto.fullName,
             username: dto.username,
             email: dto.email,
             hashedPassword,
         });
+
+        await this.driveService.create({
+            driveName: "My Drive",
+            totalSpace: 10 * 1024 * 1024 * 1024,
+            usedSpace: 0,
+            usedPercent: 0,
+            user: {
+                connect: {
+                    id: user.id,
+                },
+            },
+        })
     }
 
     async login(dto: LoginDTO, req: Request) {
