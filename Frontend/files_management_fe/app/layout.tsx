@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import TanstackQueryProvider from "@/lib/tanstack-query/provider";
+import AppThemeProvider from "@/lib/theme/provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,11 +23,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <TanstackQueryProvider>
-          {children}
-        </TanstackQueryProvider>
+        <AppThemeProvider>
+          <TanstackQueryProvider>
+            {children}
+          </TanstackQueryProvider>
+        </AppThemeProvider>
       </body>
     </html>
   );

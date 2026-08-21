@@ -1,7 +1,5 @@
-export default function Dashboard() {
-  return (
-    <div className="max-h-100 flex justify-center items-center">
-      Hi xin chao
-    </div>
-  );
+import LoginForm from "@/components/auth/LoginForm/login-form";
+
+export default function LoginPage() {
+  return <LoginForm />
 }
