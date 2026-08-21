@@ -10,10 +10,14 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     app.useGlobalInterceptors(new ResponseInterceptor());
-    app.useGlobalFilters(new HttpExceptionFilter());
+    // app.useGlobalFilters(new HttpExceptionFilter());
 
     app.setGlobalPrefix("api/v1.0");
-    app.use(cookieParser())
+    app.use(cookieParser());
+    app.enableCors({
+        origin: "http://localhost:3000",
+        credentials: true,
+    });
 
     const appConfig = app.get(AppConfigService);
 

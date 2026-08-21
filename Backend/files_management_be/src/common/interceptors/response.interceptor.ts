@@ -17,7 +17,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>
                 statusCode: defaultStatus,
                 success: true,
                 error: null,
-                data
+                data: data ?? null
             })),
         )
     }

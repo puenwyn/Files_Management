@@ -10,6 +10,7 @@ import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { ForgotPasswordDTO } from "./dtos/forgot-password.dto";
 import { VerifyOtpDTO } from "./dtos/verify-otp.dto";
 import { ResetPasswordDTO } from "./dtos/reset-password.dto";
+import { AppLoggerService } from "src/infrastructure/logger/logger.service";
 
 export interface RequestWithUser extends Request {
     user: Pick<User, "id">;
@@ -17,7 +18,9 @@ export interface RequestWithUser extends Request {
 
 @Controller("auth")
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    constructor(private readonly authService: AuthService,
+        private readonly loggerService: AppLoggerService
+    ) { }
 
     @Post("register")
     @ApiOperation({ summary: "Register a new user account", })
@@ -159,5 +162,14 @@ export class AuthController {
     @ApiResponse({ status: HttpStatus.OK, description: "Reset password successfully!", })
     async resetPassword(@Body() dto: ResetPasswordDTO) {
         return this.authService.resetPassword(dto.email, dto.newPassword);
+    }
+
+    private name = AuthController.name;
+
+    @Get("abc/hello")
+    async test() {
+        
+        this.loggerService.log("Xin chào bạn!", this.name);
+        return "";
     }
 }
