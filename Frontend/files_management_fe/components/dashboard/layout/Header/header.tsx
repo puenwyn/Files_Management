@@ -1,6 +1,7 @@
 import Image from "next/image";
 import HeaderSearch from "./header-search";
 import ThemeToggle from "@/components/theme/theme-toggle";
+import UserDropdownMenu from "./DropdownMenu/user-dropdown-menu";
 
 export default function Header() {
     return (
@@ -9,13 +10,7 @@ export default function Header() {
             <section className="flex items-center gap-3">
                 <ThemeToggle />
 
-                <Image
-                    className="size-8 rounded-full object-cover cursor-pointer"
-                    src={"/assets/images/aurorabackground.jpg"}
-                    alt="Avatar"
-                    width={30}
-                    height={30}
-                />
+                <UserDropdownMenu />
             </section>
         </header>
     )
