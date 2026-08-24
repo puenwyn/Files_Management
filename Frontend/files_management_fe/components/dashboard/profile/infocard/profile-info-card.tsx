@@ -9,6 +9,9 @@ import FormTextareaField from "../../form/form-textarea-field"
 import FormDateField from "../../form/form-date-field"
 import FormSelectField from "../../form/form-select-field"
 import AppCardSection from "../../card/app-card-section"
+import DisplayTextField from "../../form/display-text-field"
+import { UpdateProfileRequest, updateProfileRequestSchema } from "@/schemas/user/update-profile.schema"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 type ProfileForm = {
     fullName: string;
@@ -25,11 +28,11 @@ export default function ProfileInfoCard() {
     const {
         control,
         handleSubmit,
-    } = useForm<ProfileForm>({
+    } = useForm<UpdateProfileRequest>({
+        resolver: zodResolver(updateProfileRequestSchema),
+
         defaultValues: {
             fullName: "Nguyễn Huy",
-            username: "nguyenhuy",
-            email: "nguyenhuy@example.com",
             phoneNumber: "+84 912 345 678",
             bio: "Frontend Developer passionate about building beautiful and useful products.",
             dateOfBirth: undefined,
@@ -37,14 +40,18 @@ export default function ProfileInfoCard() {
         },
     });
 
+    const onSubmit = (data: UpdateProfileRequest) => {
+        console.log(data);
+    };
+
     return (
         <AppCardSection>
             <ProfileCardTitle
-                icon={<User className="size-6" />}
+                icon={User}
                 title="Personal Information"
                 titleSub="Update your personal detail and information"
             />
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-2 gap-6">
                     <FormTextField
                         control={control}
@@ -52,16 +59,14 @@ export default function ProfileInfoCard() {
                         label="Full Name"
                     />
 
-                    <FormTextField
-                        control={control}
-                        name="username"
+                    <DisplayTextField
                         label="Username"
+                        value="nguyenhuy"
                     />
 
-                    <FormTextField
-                        control={control}
-                        name="email"
+                    <DisplayTextField
                         label="Email"
+                        value="nguyenhuy@example.com"
                     />
 
                     <FormTextField
@@ -90,9 +95,9 @@ export default function ProfileInfoCard() {
                         label="Gender"
                         placeholder="Select gender"
                         options={[
-                            { label: "Male", value: "male" },
-                            { label: "Female", value: "female" },
-                            { label: "Other", value: "other" },
+                            { label: "Male", value: "Male" },
+                            { label: "Female", value: "Female" },
+                            { label: "Other", value: "Other" },
                         ]}
                     />
                 </div>

@@ -33,7 +33,7 @@ export default function MenuItem({
             <div className="flex-1 flex justify-between items-center">
                 <div className="flex flex-col">
                     <span>{label}</span>
-                    <span className="text-xs !text-primary-foreground/50">{description}</span>
+                    <span className="text-xs text-foreground/50">{description}</span>
                 </div>
             </div>
 

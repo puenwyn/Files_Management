@@ -18,7 +18,7 @@ export default function ProfileStatCard() {
     return (
         <AppCardSection>
             <ProfileCardTitle
-                icon={<ChartNoAxesColumn className="size-6" />}
+                icon={ChartNoAxesColumn}
                 title="Stats"
                 titleSub="Overview of your activity"
                 component={<span>80%</span>}

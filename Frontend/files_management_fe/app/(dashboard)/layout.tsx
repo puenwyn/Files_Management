@@ -3,11 +3,11 @@ import Sidebar from "@/components/dashboard/layout/Sidebar/sidebar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <main className="min-h-screen flex">
+        <main className="h-dvh flex">
             <Sidebar />
-            <section className="flex-1">
+            <section className="min-w-0 min-h-0 flex-1 flex flex-col">
                 <Header />
-                <div className="p-6 bg-background">
+                <div className="min-h-0 flex-1 overflow-y-auto p-6 bg-background">
                     {children}
                 </div>
             </section>

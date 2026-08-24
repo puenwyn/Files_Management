@@ -29,7 +29,7 @@ export default function ProfileStorageCard() {
     return (
         <AppCardSection>
             <ProfileCardTitle
-                icon={<ChartPie className="size-6" />}
+                icon={ChartPie}
                 title="Storage Overview"
                 titleSub="See how your storage is being used"
                 component={<span>80%</span>}

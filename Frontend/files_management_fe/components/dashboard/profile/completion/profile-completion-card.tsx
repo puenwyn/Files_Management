@@ -9,7 +9,7 @@ export default function ProfileCompletionCard() {
     return (
         <AppCardSection>
             <ProfileCardTitle
-                icon={<ListCheck className="size-6" />}
+                icon={ListCheck}
                 title="Personal Information"
                 titleSub="Update your personal detail and information"
                 component={<span>80%</span>}

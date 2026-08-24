@@ -8,7 +8,7 @@ import Image from "next/image";
 
 export default function Sidebar() {
     return (
-        <aside className="w-64 px-4 bg-card">
+        <aside className="w-64 shrink-0 overflow-y-auto px-4 bg-card">
             <div className="py-7 flex items-center">
                 <Image
                     src="/assets/images/ChatGPTGenerateFLogo.png"
