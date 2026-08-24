@@ -11,6 +11,7 @@ import { ForgotPasswordDTO } from "./dtos/forgot-password.dto";
 import { VerifyOtpDTO } from "./dtos/verify-otp.dto";
 import { ResetPasswordDTO } from "./dtos/reset-password.dto";
 import { AppLoggerService } from "src/infrastructure/logger/logger.service";
+import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 
 export interface RequestWithUser extends Request {
     user: Pick<User, "id">;
@@ -100,8 +101,10 @@ export class AuthController {
     @ApiOperation({ summary: "Get current user profile" })
     @ApiResponse({ status: HttpStatus.OK, description: "Get profile successfully." })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized." })
-    profile(@Req() req: any) {
-        return req.user;
+    getProfile(
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.authService.getProfile(req.user.id);
     }
 
     @Get("devices")
@@ -168,7 +171,7 @@ export class AuthController {
 
     @Get("abc/hello")
     async test() {
-        
+
         this.loggerService.log("Xin chào bạn!", this.name);
         return "";
     }

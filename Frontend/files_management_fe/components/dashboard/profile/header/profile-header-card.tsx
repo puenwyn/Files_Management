@@ -1,21 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import AppCardSection from "../../card/app-card-section";
-import { CloudUpload } from "lucide-react";
+import { CalendarIcon, CloudUpload } from "lucide-react";
+import { useProfile } from "@/hooks/auth/useProfile.hook";
 
-interface ProfileHeaderCard {
-    fullName: string;
-    userId: string;
-    email: string;
-    createdAt?: Date;
-}
+export default function ProfileHeaderCard() {
 
-export default function ProfileHeaderCard({
-    fullName,
-    userId,
-    email,
-    createdAt
-}: ProfileHeaderCard) {
+    const {
+        profile,
+        isLoading,
+        isError,
+    } = useProfile();
+
     return (
         <AppCardSection>
             <div className="grid grid-cols-2">
@@ -28,10 +24,23 @@ export default function ProfileHeaderCard({
                     </Avatar>
 
                     <div className="flex flex-col gap-1">
-                        <span className="text-lg text-foreground">{fullName}</span>
-                        <span className="text-foreground/50">{userId}</span>
-                        <span className="text-foreground/50">{email}</span>
-                        <span className="text-foreground/50">{createdAt ? createdAt.toDateString() : ""}</span>
+                        <span className="text-lg text-foreground">{profile?.fullName}</span>
+                        <span className="text-foreground/50">{profile?.username}</span>
+                        <span className="text-foreground/50">{profile?.email}</span>
+                        <div className="flex gap-1 items-center">
+                            <span className="text-foreground/50"><CalendarIcon className="size-4" /></span>
+                            <span className="text-foreground/50">
+                                Joined{" "}
+                                {profile?.createdAt
+                                    ? new Date(profile.createdAt).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                    })
+                                    : ""}
+                            </span>
+                        </div>
+
                     </div>
                 </div>
 

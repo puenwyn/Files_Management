@@ -1,6 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { UpdateProfileDTO } from "./dtos/update-profile.dto";
+import { ProfileResponseDTO } from "./dtos/profile-response.dto";
 
 @Injectable()
 export class UserService {
@@ -51,4 +53,51 @@ export class UserService {
         })
     }
 
+    async getProfile(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                fullName: true,
+                username: true,
+                email: true,
+                phoneNumber: true,
+                bio: true,
+                dob: true,
+                gender: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+
+        if (!user) throw new NotFoundException("User is not found!");
+        return user;
+    }
+
+    async updateProfile(userId: string, dto: UpdateProfileDTO): Promise<ProfileResponseDTO> {
+        const userExisted = await this.prisma.user.findUnique({
+            where: {
+                id: userId
+            },
+        });
+        if (!userExisted) throw new NotFoundException("User not found!");
+
+        const user = await this.update(userId, {
+            fullName: dto.fullName,
+            phoneNumber: dto.phoneNumber,
+            bio: dto.bio,
+            dob: dto.dob ? new Date(dto.dob) : undefined,
+            gender: dto.gender,
+        });
+
+        return {
+            fullName: user.fullName,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            bio: user.bio,
+            dob: user.dob,
+            gender: user.gender,
+            updatedAt: user.updatedAt,
+        };
+    }
 }

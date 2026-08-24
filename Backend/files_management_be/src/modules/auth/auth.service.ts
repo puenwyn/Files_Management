@@ -1,5 +1,5 @@
 import { RegisterDTO } from "./dtos/register.dto";
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { LoginDTO } from "./dtos/login.dto";
 import { UserService } from "../user/user.service";
@@ -184,6 +184,10 @@ export class AuthService {
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
         };
+    }
+
+    async getProfile(userId: string) {
+        return this.userService.getProfile(userId);
     }
 
     async getDevices(userId: string) {

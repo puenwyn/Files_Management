@@ -14,11 +14,7 @@ export default function ProfilePage() {
                 subTitle="Manage your personal information and profile details"
             />
             <section>
-                <ProfileHeaderCard
-                    fullName="Nguyễn Văn An"
-                    userId="1234567890"
-                    email="nguyenan@example.com"
-                />
+                <ProfileHeaderCard />
             </section>
             <div className="grid grid-cols-2 gap-5">
                 <section className="flex flex-col gap-5">
