@@ -55,6 +55,7 @@
   --primary: oklch(0.50 0.24 275);
   --primary-foreground: oklch(1 0 0);
   --brand-gradient-start: oklch(0.50 0.24 275);
+  --brand-gradient-middle: oklch(0.65 0.15 230);
   --brand-gradient-end: oklch(0.58 0.20 265);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -95,6 +96,7 @@
   --primary: oklch(0.55 0.22 275);
   --primary-foreground: oklch(1 0 0);
   --brand-gradient-start: oklch(0.55 0.22 275);
+  --brand-gradient-middle: oklch(0.65 0.15 230);
   --brand-gradient-end: oklch(0.62 0.18 265);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

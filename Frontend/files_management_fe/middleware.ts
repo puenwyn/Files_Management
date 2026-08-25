@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const PUBLIC_ROUTES = [
     "/login",
     "/register",
-    "forgot-password",
+    "/forgot-password",
+    "/reset-password"
 ]
 
 export function middleware(request: NextRequest) {
@@ -26,5 +27,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/((?!_next|api|favicon.ico|images).*)"],
+    matcher: ["/((?!_next|api|favicon.ico|images|icons).*)"],
 };

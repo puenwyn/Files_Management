@@ -10,6 +10,7 @@ import TextDivider from "../Divider/text-divider";
 import Image from "next/image";
 import ThemeToggle from "@/components/theme/theme-toggle";
 import Link from "next/link";
+import { Controller } from "react-hook-form";
 
 export default function LoginForm() {
 
@@ -21,8 +22,10 @@ export default function LoginForm() {
         error,
     } = useLogin();
 
+    const { control } = form;
+
     return (
-        <div className="w-2/3 p-8 shadow-[0_2px_12px_2px_rgba(0,0,0,0.08)] rounded-lg space-y-4">
+        <div className="w-full space-y-5">
             <h1 className="text-3xl font-bold text-center tracking-tight">
                 Login
             </h1>
@@ -31,7 +34,7 @@ export default function LoginForm() {
                     name="username"
                     label="Username"
                     placeholder="Enter your username"
-                    icon={<User className="size-4" />}
+                    leftIcon={<User className="size-4" />}
                     register={form.register}
                     error={form.formState.errors.username?.message}
                 />
@@ -41,28 +44,37 @@ export default function LoginForm() {
                     label="Password"
                     type="password"
                     placeholder="Enter your username"
-                    icon={<Lock className="size-4" />}
+                    leftIcon={<Lock className="size-4" />}
                     register={form.register}
-                    error={form.formState.errors.username?.message}
+                    error={form.formState.errors.password?.message}
                 />
 
-                <section className="flex justify-between items-center">
-                    <div className="flex gap-1 items-center">
-                        <Checkbox
-                            id="rememberMe"
-                            checked={true}
-                            onCheckedChange={() => { }}
-                        />
-                        <Label htmlFor="rememberMe">Remember me</Label>
-                    </div>
+                <Controller
+                    control={control}
+                    name="rememberMe"
+                    render={({ field }) => (
+                        <section className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="rememberMe"
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                />
 
-                    <Link
-                        href="/forgot-password"
-                        className="text-sm font-medium text-primary hover:underline underline-offset-4"
-                    >
-                        Forgot password?
-                    </Link>
-                </section>
+                                <Label htmlFor="rememberMe">
+                                    Remember me
+                                </Label>
+                            </div>
+
+                            <Link
+                                href="/forgot-password"
+                                className="text-sm font-medium text-primary hover:underline underline-offset-4"
+                            >
+                                Forgot password?
+                            </Link>
+                        </section>
+                    )}
+                />
 
                 <AuthButton
                     type="submit"
@@ -87,7 +99,7 @@ export default function LoginForm() {
                         Don't have an account?
                     </span>
                     <Link
-                        href="/forgot-password"
+                        href={"/register"}
                         className="text-sm font-medium text-primary hover:underline underline-offset-4"
                     >
                         Register

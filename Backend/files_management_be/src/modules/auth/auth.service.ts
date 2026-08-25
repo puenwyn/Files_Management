@@ -12,6 +12,7 @@ import { randomUUID } from "crypto";
 import { MailService } from "../mail/mail.service";
 import { RedisService } from "../redis/redis.service";
 import { DriveService } from "../drive/drive.service";
+import { StringValue } from "ms";
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,7 @@ export class AuthService {
         });
     }
 
-    private async generateRefreshToken(userId: string) {
+    private async generateRefreshToken(userId: string, expiresIn: StringValue) {
         return this.jwtService.signAsync(
             {
                 sub: userId,
@@ -39,7 +40,7 @@ export class AuthService {
             },
             {
                 secret: process.env.JWT_REFRESH_SECRET,
-                expiresIn: process.env.JWT_REFRESH_EXPIRES_IN as any,
+                expiresIn,
             },
         );
     }
@@ -83,8 +84,12 @@ export class AuthService {
         );
         if (!isMatched) throw new UnauthorizedException("Invalid username or password!");
 
+        const refreshExpiresIn: StringValue = dto.rememberMe
+            ? process.env.JWT_REFRESH_EXPIRES_IN as StringValue
+            : "1d";
+
         const accessToken = await this.generateAccessToken(user.id);
-        const refreshToken = await this.generateRefreshToken(user.id);
+        const refreshToken = await this.generateRefreshToken(user.id, refreshExpiresIn);
 
         console.log("LOGIN REFRESH:");
         console.log(refreshToken);
@@ -118,6 +123,7 @@ export class AuthService {
         return {
             accessToken,
             refreshToken,
+            refreshExpiresIn
         };
     }
 
@@ -158,8 +164,17 @@ export class AuthService {
             throw new UnauthorizedException("Refresh token has expired!");
         }
 
+        const remainingTime =
+            currentToken.expiresAt.getTime() - Date.now();
+
+        const refreshExpiresIn =
+            `${remainingTime}ms` as StringValue;
+
         const newAccessToken = await this.generateAccessToken(userId);
-        const newRefreshToken = await this.generateRefreshToken(userId);
+        const newRefreshToken = await this.generateRefreshToken(
+            userId,
+            refreshExpiresIn,
+        );
 
         const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
 
@@ -172,7 +187,7 @@ export class AuthService {
             deviceName: currentToken.deviceName,
             ipAddress: currentToken.ipAddress,
             userAgent: currentToken.userAgent,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            expiresAt: currentToken.expiresAt,
             user: {
                 connect: {
                     id: userId,
@@ -183,6 +198,7 @@ export class AuthService {
         return {
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
+            refreshExpiresIn
         };
     }
 
