@@ -1,6 +1,6 @@
 "use client"
 import { LockKeyhole } from "lucide-react";
-import AppCardSection from "../../card/app-card-section";
+import AppCardSection from "../../common/app-card-section";
 import ProfileCardTitle from "../../profile/profile-card-title";
 import FormTextField from "../../form/form-text-field";
 import { Button } from "@/components/ui/button";

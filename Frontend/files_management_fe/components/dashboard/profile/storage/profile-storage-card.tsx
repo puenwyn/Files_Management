@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import ProfileCardTitle from "../profile-card-title";
 import { ChartPie } from "lucide-react";
-import AppCardSection from "../../card/app-card-section";
+import AppCardSection from "../../common/app-card-section";
 
 interface ChartNoteProps {
     color: string;

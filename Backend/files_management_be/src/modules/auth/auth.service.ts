@@ -1,5 +1,5 @@
 import { RegisterDTO } from "./dtos/register.dto";
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { LoginDTO } from "./dtos/login.dto";
 import { UserService } from "../user/user.service";
@@ -71,7 +71,10 @@ export class AuthService {
                     id: user.id,
                 },
             },
-        })
+        });
+        return {
+            message: "Register successfully"
+        };
     }
 
     async login(dto: LoginDTO, req: Request) {
@@ -229,6 +232,20 @@ export class AuthService {
         }
     }
 
+    async logoutSession(userId: string, sessionId: string) {
+        const session = await this.refreshTokenService.findById(sessionId);
+
+        if (!session) {
+            throw new NotFoundException("Session not found",);
+        }
+        if (session.userId !== userId) {
+            throw new ForbiddenException("You cannot logout this device",);
+        }
+        await this.refreshTokenService.deleteById(
+            sessionId,
+        );
+    }
+
     async logoutAllDevices(userId: string, req: Request) {
         const refreshToken = req.cookies.refresh_token;
 
@@ -273,39 +290,18 @@ export class AuthService {
 
     }
 
-    async verifyOTP(email: string, otp: string) {
+    async resetPassword(
+        email: string,
+        otp: string,
+        newPassword: string,
+    ) {
         const key = `forgot-password:otp:${email}`;
 
         const storedOTP = await this.redisService.get(key);
 
         if (!storedOTP) throw new UnauthorizedException("OTP is expired or invalid!");
-        if (storedOTP !== otp) {
-            throw new UnauthorizedException(
-                "Invalid OTP!"
-            );
-        }
 
-        const verifiedKey = `forgot-password:verified:${email}`;
-
-        await this.redisService.set(verifiedKey, "true", 10 * 60);
-
-        await this.redisService.delete(key);
-
-        return {
-            message: "OTP verified successfully!",
-        };
-    }
-
-    async resetPassword(email: string, newPassword: string) {
-        const verifiedKey = `forgot-password:verified:${email}`;
-
-        const isVerified = await this.redisService.get(verifiedKey);
-
-        if (isVerified !== "true") {
-            throw new UnauthorizedException(
-                "Please verify OTP first!",
-            );
-        }
+        if (storedOTP !== otp) throw new UnauthorizedException("OTP is invalid");
 
         const user = await this.userService.findByEmail(email);
 
@@ -315,13 +311,16 @@ export class AuthService {
             );
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(
+            newPassword,
+            10,
+        );
 
         await this.userService.update(user.id, {
             hashedPassword,
         });
 
-        await this.redisService.delete(verifiedKey);
+        await this.redisService.delete(key);
 
         return {
             message: "Password reset successfully!",

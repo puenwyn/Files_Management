@@ -1,5 +1,5 @@
 import { ChartNoAxesColumn } from "lucide-react";
-import AppCardSection from "../../card/app-card-section";
+import AppCardSection from "../../common/app-card-section";
 import ProfileCardTitle from "../profile-card-title";
 
 interface StatItemProps {

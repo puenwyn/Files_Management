@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import FormTextareaField from "../../form/form-textarea-field"
 import FormDateField from "../../form/form-date-field"
 import FormSelectField from "../../form/form-select-field"
-import AppCardSection from "../../card/app-card-section"
+import AppCardSection from "../../common/app-card-section"
 import DisplayTextField from "../../form/display-text-field"
 import { useUpdateProfile } from "@/hooks/user/useUpdateProfile"
 

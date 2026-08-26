@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import AppCardSection from "../../card/app-card-section";
+import AppCardSection from "../../common/app-card-section";
 import { CalendarIcon, CloudUpload } from "lucide-react";
 import { useProfile } from "@/hooks/auth/useProfile.hook";
 

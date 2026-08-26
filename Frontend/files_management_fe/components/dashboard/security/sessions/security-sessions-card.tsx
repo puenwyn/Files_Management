@@ -1,6 +1,6 @@
 "use client"
 import { Laptop, MonitorCog, Smartphone, TvMinimal } from "lucide-react";
-import AppCardSection from "../../card/app-card-section";
+import AppCardSection from "../../common/app-card-section";
 import ProfileCardTitle from "../../profile/profile-card-title";
 import SessionItem from "./session-item";
 import SessionBox from "./session-box";

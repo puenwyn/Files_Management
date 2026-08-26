@@ -1,5 +1,12 @@
+import PageTitle from "@/components/dashboard/layout/Title/page-title";
+
 export default function DrivesPage() {
     return (
-        <div>This is Drives Page</div>
+        <main className="space-y-5">
+            <PageTitle
+                title="My Drives"
+                subTitle="Manage your drives and storage"
+            />
+        </main>
     )
 }

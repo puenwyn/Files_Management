@@ -8,7 +8,6 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { User } from "@prisma/client";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { ForgotPasswordDTO } from "./dtos/forgot-password.dto";
-import { VerifyOtpDTO } from "./dtos/verify-otp.dto";
 import { ResetPasswordDTO } from "./dtos/reset-password.dto";
 import { AppLoggerService } from "src/infrastructure/logger/logger.service";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
@@ -115,8 +114,7 @@ export class AuthController {
     }
 
     @Post("logout")
-    @UseGuards(JwtAuthGuard)
-    @UseGuards(JwtRefreshGuard)
+    @UseGuards(JwtAuthGuard, JwtRefreshGuard)
     async logout(
         @Req() req: RequestWithUser,
         @Res({ passthrough: true }) res: Response,
@@ -132,8 +130,7 @@ export class AuthController {
     }
 
     @Post("logout-devices")
-    @UseGuards(JwtAuthGuard)
-    @UseGuards(JwtRefreshGuard)
+    @UseGuards(JwtAuthGuard, JwtRefreshGuard)
     async logoutAllDevices(
         @Req() req: RequestWithUser,
         @Res({ passthrough: true }) res: Response,
@@ -154,18 +151,20 @@ export class AuthController {
         return this.authService.forgotPassword(dto.email);
     }
 
-    @Post("verify-otp")
-    @ApiOperation({ summary: "Verify forgot password OTP", })
-    @ApiResponse({ status: HttpStatus.OK, description: "OTP verified successfully.", })
-    async verifyOTP(@Body() dto: VerifyOtpDTO) {
-        return this.authService.verifyOTP(dto.email, dto.otp);
-    }
-
     @Post("reset-password")
-    @ApiOperation({ summary: "Reset account password", })
-    @ApiResponse({ status: HttpStatus.OK, description: "Reset password successfully!", })
+    @ApiOperation({
+        summary: "Reset account password",
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: "Password reset successfully!",
+    })
     async resetPassword(@Body() dto: ResetPasswordDTO) {
-        return this.authService.resetPassword(dto.email, dto.newPassword);
+        return this.authService.resetPassword(
+            dto.email,
+            dto.otp,
+            dto.newPassword,
+        );
     }
 
     private name = AuthController.name;

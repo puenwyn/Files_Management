@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import ProfileCardTitle from "../profile-card-title";
 import { ChevronRight, ListCheck } from "lucide-react";
 import CompletionItem from "./completion-item";
-import AppCardSection from "../../card/app-card-section";
+import AppCardSection from "../../common/app-card-section";
 import { Button } from "@/components/ui/button";
 
 export default function ProfileCompletionCard() {
