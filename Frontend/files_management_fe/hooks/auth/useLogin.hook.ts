@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { authService } from "@/services/auth/auth.service";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/toast";
 
 export function useLogin() {
     const router = useRouter();
@@ -21,10 +22,18 @@ export function useLogin() {
         mutationFn: authService.login,
         onSuccess: (data) => {
             console.log("Login success:", data);
+            toast.add({
+                type: "success",
+                description: "Login successfully!",
+            });
             router.push("/login");
         },
         onError: (error) => {
             console.log("Login error:", error.message);
+            toast.add({
+                type: "error",
+                description: "Username or password is invalid!"
+            })
         },
     })
 

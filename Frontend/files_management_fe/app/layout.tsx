@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import TanstackQueryProvider from "@/lib/tanstack-query/provider";
 import AppThemeProvider from "@/lib/theme/provider";
+import { Toast, Toaster } from "@/components/ui/toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,6 +30,7 @@ export default function RootLayout({
         <AppThemeProvider>
           <TanstackQueryProvider>
             {children}
+            <Toaster />
           </TanstackQueryProvider>
         </AppThemeProvider>
       </body>
