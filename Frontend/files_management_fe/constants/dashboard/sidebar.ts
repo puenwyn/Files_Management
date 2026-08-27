@@ -1,4 +1,4 @@
-import { CircleQuestionMark, Clock, Folder, Home, Settings, Star, Trash2, Users } from "lucide-react";
+import { CircleQuestionMark, Clock, Folder, HardDrive, Home, Settings, Star, Trash2, Users } from "lucide-react";
 
 export const sidebarItems = [
     {
@@ -30,6 +30,14 @@ export const sidebarItems = [
         title: "Trash",
         icon: Trash2,
         href: "/trash"
+    },
+]
+
+export const sidebarStorageItems = [
+    {
+        title: "Drives",
+        icon: HardDrive,
+        href: "/drives"
     },
 ]
 

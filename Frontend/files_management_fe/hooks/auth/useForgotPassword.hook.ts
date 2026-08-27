@@ -1,3 +1,4 @@
+import { toast } from "@/components/ui/toast";
 import { ForgotPasswordRequest, forgotPasswordRequestSchema } from "@/schemas/auth/forgot-password.schema";
 import { authService } from "@/services/auth/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +27,10 @@ export function useForgotPassword() {
             );
 
             router.push("/reset-password");
+            toast.add({
+                type: "success",
+                description: "If this email exists, an OTP has been sent."
+            });
         },
 
         onError: (error: Error) => {

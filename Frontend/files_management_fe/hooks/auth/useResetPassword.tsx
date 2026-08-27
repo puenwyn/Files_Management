@@ -1,3 +1,4 @@
+import { toast } from "@/components/ui/toast";
 import { ResetPasswordForm, resetPasswordFormSchema } from "@/schemas/auth/reset-password.schema";
 import { authService } from "@/services/auth/auth.service";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,9 +35,17 @@ export function useResetPassword() {
         onSuccess: () => {
             sessionStorage.removeItem("reset_email");
             router.replace("/login");
+            toast.add({
+                type: "success",
+                description: "Reset password successfully!"
+            });
         },
         onError: (error: Error) => {
             console.log(error);
+            toast.add({
+                type: "error",
+                description: error.message
+            });
         },
     })
 

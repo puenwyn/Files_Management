@@ -9,7 +9,7 @@ export default function FolderGridView() {
             xl:grid-cols-5
             gap-4
         ">
-            <FolderItem
+            {/* <FolderItem
                 name="Tài liệu học tập"
                 items={13}
             />
@@ -28,7 +28,7 @@ export default function FolderGridView() {
             <FolderItem
                 name="Tài liệu học tập"
                 items={13}
-            />
+            /> */}
         </div>
     )
 }

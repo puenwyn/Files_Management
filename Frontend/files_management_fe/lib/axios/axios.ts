@@ -7,6 +7,7 @@ const axiosClient: AxiosInstance = axios.create({
     },
     withCredentials: true
 });
+console.log("AXIOS CLIENT CREATED");
 
 let isRefreshing = false;
 
@@ -27,9 +28,16 @@ const processQueue = (error?: AxiosError) => {
 }
 
 axiosClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log("🟢 RESPONSE INTERCEPTOR:", response.config.url);
+        return response;
+    },
 
     async (error: AxiosError) => {
+        console.log("🔥 RESPONSE INTERCEPTOR", {
+            status: error.response?.status,
+            url: error.config?.url,
+        });
         const originalRequest =
             error.config as InternalAxiosRequestConfig & {
                 _retry?: boolean;

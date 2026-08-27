@@ -1,5 +1,5 @@
 "use client"
-import { sidebarFooterItems, sidebarItems } from "@/constants/dashboard/sidebar";
+import { sidebarFooterItems, sidebarItems, sidebarStorageItems } from "@/constants/dashboard/sidebar";
 import SidebarItem from "./sidebar-item";
 import SidebarSection from "./sidebar-section";
 import BasicDivider from "../Divider/basic-divider";
@@ -48,6 +48,19 @@ export default function Sidebar() {
             <BasicDivider />
 
             <SidebarSection title="Storage">
+                <nav className="flex flex-col gap-2">
+                    {sidebarStorageItems.map((item, index) => {
+                        const Icon = item.icon;
+                        return (
+                            <SidebarItem
+                                key={index}
+                                icon={<Icon className="size-5" />}
+                                title={item.title}
+                                href={item.href}
+                            />
+                        )
+                    })}
+                </nav>
                 <SidebarStorage />
             </SidebarSection>
 

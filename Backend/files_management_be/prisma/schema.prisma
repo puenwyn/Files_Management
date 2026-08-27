@@ -63,6 +63,7 @@ model Drive {
   totalSpace  BigInt
   usedSpace   BigInt
   usedPercent Float
+  primary     Boolean?  @default(false)
   userId      String
   isDeleted   Boolean   @default(false)
   createdAt   DateTime  @default(now())

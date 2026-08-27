@@ -1,10 +1,33 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Drive, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { DriveResponseDTO } from "./dtos/drive-response.dto";
 
 @Injectable()
 export class DriveService {
     constructor(private readonly prisma: PrismaService) { }
+
+    async getDrives(userId: string): Promise<DriveResponseDTO[]> {
+        const drives = await this.prisma.drive.findMany({
+            where: {
+                userId,
+                isDeleted: false
+            },
+            orderBy: {
+                driveName: "asc"
+            },
+        });
+        return drives.map((drive) => ({
+            id: drive.id,
+            driveName: drive.driveName,
+            totalSpace: drive.totalSpace.toString(),
+            usedSpace: drive.usedSpace.toString(),
+            usedPercent: drive.usedPercent,
+            primary: drive.primary ?? false,
+            createdAt: drive.createdAt,
+            updatedAt: drive.updatedAt
+        }));
+    }
 
     async create(data: Prisma.DriveCreateInput) {
         return this.prisma.drive.create({
@@ -22,6 +45,29 @@ export class DriveService {
         });
         if (!drive) throw new NotFoundException("Drive is not found or it's your own!");
         return drive;
+    }
+
+    async findDriveById(driveId: string, userId: string): Promise<DriveResponseDTO> {
+        const drive = await this.prisma.drive.findUnique({
+            where: {
+                id: driveId,
+                userId,
+                isDeleted: false
+            },
+        });
+
+        if (!drive) throw new NotFoundException("Drive not found");
+
+        return {
+            id: drive.id,
+            driveName: drive.driveName,
+            totalSpace: drive.totalSpace.toString(),
+            usedSpace: drive.usedSpace.toString(),
+            usedPercent: drive.usedPercent,
+            primary: drive.primary ?? false,
+            createdAt: drive.createdAt,
+            updatedAt: drive.updatedAt
+        };
     }
 
     async renameDrive(id: string, userId: string, newDriveName: string) {

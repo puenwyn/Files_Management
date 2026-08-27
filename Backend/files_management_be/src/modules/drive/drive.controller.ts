@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { DriveService } from "./drive.service";
 import { RenameDriveDTO } from "./dtos/rename-drive.dto";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
@@ -17,6 +17,29 @@ export class DriveController {
     // async addDrive() {
 
     // }
+
+    @Get()
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Get all user drives"
+    })
+    async getDrives(
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.drive.getDrives(req.user.id);
+    }
+
+    @Get(":id")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Get drive by id"
+    })
+    async findDriveById(
+        @Req() req: AuthenticatedRequest,
+        @Param("id") id: string
+    ) {
+        return this.drive.findDriveById(id, req.user.id);
+    }
 
     @Patch(":id/rename")
     @UseGuards(JwtAuthGuard)

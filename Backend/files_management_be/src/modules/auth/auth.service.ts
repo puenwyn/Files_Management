@@ -63,9 +63,10 @@ export class AuthService {
 
         await this.driveService.create({
             driveName: "My Drive",
-            totalSpace: 10 * 1024 * 1024 * 1024,
+            totalSpace: 3 * 1024 * 1024 * 1024,
             usedSpace: 0,
             usedPercent: 0,
+            primary: true,
             user: {
                 connect: {
                     id: user.id,

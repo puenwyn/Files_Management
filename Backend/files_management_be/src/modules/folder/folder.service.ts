@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { DriveService } from "../drive/drive.service";
 import { FolderStatus, PermissionType } from "@prisma/client";
 import * as bcrypt from 'bcrypt';
+import { FolderResponseDTO } from "./dtos/folder-response.dto";
 
 @Injectable()
 export class FolderService {
@@ -90,9 +91,9 @@ export class FolderService {
         });
     }
 
-    async getDriveFolders(userId: string, driveId: string) {
+    async getDriveFolders(userId: string, driveId: string): Promise<FolderResponseDTO[]> {
         await this.checkDrive(driveId, userId);
-        return this.prisma.folder.findMany({
+        const folders = await this.prisma.folder.findMany({
             where: {
                 parentFolderId: null,
                 driveId,
@@ -101,7 +102,15 @@ export class FolderService {
             orderBy: {
                 folderName: "asc"
             }
-        })
+        });
+        return folders.map((folder) => ({
+            id: folder.id,
+            folderName: folder.folderName,
+            parentFolderId: folder.parentFolderId,
+            status: folder.status,
+            createdAt: folder.createdAt,
+            updatedAt: folder.updatedAt
+        }));
     }
 
     private hasPermission(current: PermissionType, required: PermissionType): boolean {
