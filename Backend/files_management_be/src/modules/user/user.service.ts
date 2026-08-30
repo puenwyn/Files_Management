@@ -100,4 +100,14 @@ export class UserService {
             updatedAt: user.updatedAt,
         };
     }
+
+    async findByIdWithPassword(id: string) {
+        return this.prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                hashedPassword: true,
+            },
+        });
+    }
 }

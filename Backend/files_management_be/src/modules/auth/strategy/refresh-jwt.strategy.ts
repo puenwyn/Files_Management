@@ -4,7 +4,6 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { UserService } from "src/modules/user/user.service";
 import { JwtPayload } from "../interfaces/jwt-payload.interface";
-import { User } from "@prisma/client";
 
 @Injectable()
 export class RefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
@@ -23,7 +22,9 @@ export class RefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
         });
     }
 
-    async validate(payload: JwtPayload) : Promise<Pick<User, "id">> {
+    async validate(payload: JwtPayload) {
+        console.log("REFRESH PAYLOAD:", payload);
+
         const user = await this.userService.findById(payload.sub);
 
         if (!user) {
@@ -32,6 +33,7 @@ export class RefreshStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
 
         return {
             id: user.id,
+            jti: payload.jti,
         };
     }
 }

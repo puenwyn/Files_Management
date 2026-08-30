@@ -42,6 +42,36 @@ export class AppConfigService {
         return this.configService.getOrThrow<EnvSchemaType['DATABASE_URL']>('DATABASE_URL');
     }
 
+    get JWT_ACCESS_SECRET(): string {
+        return this.configService.getOrThrow<EnvSchemaType['JWT_ACCESS_SECRET']>(
+            'JWT_ACCESS_SECRET'
+        );
+    }
+
+    get JWT_ACCESS_EXPIRES_IN(): string {
+        return this.configService.getOrThrow<EnvSchemaType['JWT_ACCESS_EXPIRES_IN']>(
+            'JWT_ACCESS_EXPIRES_IN'
+        );
+    }
+
+    get JWT_REFRESH_SECRET(): string {
+        return this.configService.getOrThrow<EnvSchemaType['JWT_REFRESH_SECRET']>(
+            'JWT_REFRESH_SECRET'
+        );
+    }
+
+    get JWT_REFRESH_EXPIRES_IN(): string {
+        return this.configService.getOrThrow<EnvSchemaType['JWT_REFRESH_EXPIRES_IN']>(
+            'JWT_REFRESH_EXPIRES_IN'
+        );
+    }
+
+    get JWT_HIDDEN_SECRET(): string {
+        return this.configService.getOrThrow<EnvSchemaType['JWT_HIDDEN_SECRET']>(
+            'JWT_HIDDEN_SECRET'
+        );
+    }
+
     get MAIL_HOST(): string {
         return this.configService.getOrThrow<EnvSchemaType['MAIL_HOST']>('MAIL_HOST');
     }

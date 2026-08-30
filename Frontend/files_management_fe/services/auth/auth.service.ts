@@ -7,6 +7,7 @@ import { ProfileResponse, profileResponseSchema } from "@/schemas/auth/profile.s
 import { RegisterRequest } from "@/schemas/auth/register.schema";
 import { ResetPasswordRequest } from "@/schemas/auth/reset-password.schema";
 import { SessionListResponse, sessionListResponseSchema } from "@/schemas/auth/session.schema";
+import { VerifyPasswordRequest } from "@/schemas/auth/verify-password.schema";
 import { CommonResponse, commonResponseSchema } from "@/schemas/common/common-response.schema";
 import axios from "axios";
 
@@ -127,6 +128,50 @@ export const authService = {
                     throw new Error(responseData.error.message);
                 }
             }
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    verifyPassword: async (data: VerifyPasswordRequest): Promise<CommonResponse> => {
+        try {
+            const response = await axiosClient.post(
+                "/auth/verify-password",
+                data
+            );
+            const result = createApiResponseSchema(commonResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            console.log("Error nè: " + error);
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData?.error?.code === ErrorCode.UNAUTHORIZED) {
+                    throw new Error(responseData.error.message);
+                }
+            }
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    hideHidden: async (): Promise<CommonResponse> => {
+        try {
+            const response = await axiosClient.post(
+                "/auth/hide-hidden"
+            );
+
+            const result = createApiResponseSchema(
+                commonResponseSchema
+            ).parse(response.data);
+
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+
+                if (responseData?.error?.code === ErrorCode.UNAUTHORIZED) {
+                    throw new Error(responseData.error.message);
+                }
+            }
+
             throw new Error("Can't connect to server");
         }
     },

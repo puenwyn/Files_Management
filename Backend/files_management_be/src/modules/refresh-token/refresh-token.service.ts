@@ -29,6 +29,14 @@ export class RefreshTokenService {
         });
     }
 
+    async findByJti(jti: string) {
+        return this.prisma.refreshToken.findUnique({
+            where: {
+                jti,
+            },
+        });
+    }
+
     async findByUserId(userId: string) {
         return this.prisma.refreshToken.findMany({
             where: {

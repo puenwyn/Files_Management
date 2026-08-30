@@ -12,6 +12,8 @@ import { ResetPasswordDTO } from "./dtos/reset-password.dto";
 import { AppLoggerService } from "src/infrastructure/logger/logger.service";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import ms, { StringValue } from "ms";
+import { VerifyPasswordDTO } from "./dtos/verify-password.dto";
+import type { RefreshRequest } from "src/common/interfaces/refresh-request.interface";
 
 export interface RequestWithUser extends Request {
     user: Pick<User, "id">;
@@ -66,12 +68,13 @@ export class AuthController {
     @Post("refresh")
     @UseGuards(JwtRefreshGuard)
     async refresh(
-        @Req() req: Request,
+        @Req() req: RefreshRequest,
         @Res({ passthrough: true }) res: Response,
     ) {
         const { accessToken, refreshToken, refreshExpiresIn } =
             await this.authService.refresh(
-                (req.user as { id: string }).id,
+                req.user.id,
+                req.user.jti,
                 req,
             );
 
@@ -165,6 +168,52 @@ export class AuthController {
             dto.otp,
             dto.newPassword,
         );
+    }
+
+    @Post("verify-password")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Verify current user's password",
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: "Password verified successfully",
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: "Invalid password",
+    })
+    async verifyPassword(
+        @Req() req: AuthenticatedRequest,
+        @Body() dto: VerifyPasswordDTO,
+        @Res({ passthrough: true }) res: Response
+    ) {
+        const { hiddenToken } = await this.authService.verifyPassword(
+            req.user.id,
+            dto.password,
+        );
+
+        res.cookie("hidden_token", hiddenToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+        });
+
+        return {
+            message: "Password verified successfully!",
+        };
+    }
+
+    @Post("hide-hidden")
+    @UseGuards(JwtAuthGuard)
+    async hideHidden(
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        res.clearCookie("hidden_token");
+
+        return {
+            message: "Hidden folders hidden successfully!",
+        };
     }
 
     private name = AuthController.name;

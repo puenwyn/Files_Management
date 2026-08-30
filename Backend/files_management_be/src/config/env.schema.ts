@@ -12,6 +12,12 @@ export const EnvSchema = z.object({
     DB_PASSWORD: z.string(),
     DATABASE_URL: z.string(),
 
+    JWT_ACCESS_SECRET: z.string(),
+    JWT_ACCESS_EXPIRES_IN: z.string(),
+    JWT_REFRESH_SECRET: z.string(),
+    JWT_REFRESH_EXPIRES_IN: z.string(),
+    JWT_HIDDEN_SECRET: z.string(),
+
     MAIL_HOST: z.string(),
     MAIL_PORT: z.coerce.number(),
     MAIL_SECURE: z.string().transform((value) => value.toLowerCase() === "true"),

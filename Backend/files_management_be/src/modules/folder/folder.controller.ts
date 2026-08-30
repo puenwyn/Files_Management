@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { FolderService } from "./folder.service";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { CreateFolderDTO } from "./dtos/create-folder.dto";
@@ -7,10 +7,14 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RenameFolderDTO } from "./dtos/rename-folder.dto";
 import { HideFolderDTO } from "./dtos/hide-folder.dto";
 import { ShowFolderDTO } from "./dtos/show-folder.dto";
+import { AuthService } from "../auth/auth.service";
 
 @Controller("folder")
 export class FolderController {
-    constructor(private readonly folderService: FolderService) { }
+    constructor(
+        private readonly folderService: FolderService,
+        private readonly authService: AuthService
+    ) { }
 
     @Get("drive/:id")
     @UseGuards(JwtAuthGuard)
@@ -21,10 +25,14 @@ export class FolderController {
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: "Drive is not found or it's your own!" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     async getDriveFolders(
-        @Param("id") id: string,
-        @Req() req: AuthenticatedRequest
+        @Req() req: AuthenticatedRequest,
+        @Param("id") id: string
     ) {
-        return this.folderService.getDriveFolders(req.user.id, id);
+        const showHidden = await this.authService.verifyHiddenToken(
+            req.user.id,
+            req.cookies.hidden_token
+        );
+        return this.folderService.getDriveFolders(req.user.id, id, showHidden);
     }
 
     @Get(":id/children")
@@ -37,10 +45,15 @@ export class FolderController {
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: "You are forbidden!" })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
     async getFolderChildrens(
-        @Param("id") id: string,
-        @Req() req: AuthenticatedRequest
+        @Req() req: AuthenticatedRequest,
+        @Param("id") id: string
     ) {
-        return this.folderService.getFolderChildrens(id, req.user.id);
+        const showHidden = await this.authService.verifyHiddenToken(
+            req.user.id,
+            req.cookies.hidden_token
+        );
+        console.log("This is Show Hidden" + showHidden);
+        return this.folderService.getFolderChildrens(id, req.user.id, showHidden);
     }
 
     @Post()
@@ -105,6 +118,23 @@ export class FolderController {
         @Body() dto: ShowFolderDTO,
         @Req() req: AuthenticatedRequest
     ) {
-        return this.folderService.showFolder(req.user.id, id, dto.password);
+        return this.folderService.showFolder(req.user.id, id, dto.comparePassword);
+    }
+
+    @Delete(":id/delete")
+    @UseGuards(JwtAuthGuard)
+    async deleteFolder(
+        @Req() req: AuthenticatedRequest,
+        @Param("id") folderId: string,
+    ) {
+        return this.folderService.deleteFolder(req.user.id, folderId);
+    }
+
+    @Get("trash")
+    @UseGuards(JwtAuthGuard)
+    async getTrash(
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.folderService.getTrash(req.user.id);
     }
 }

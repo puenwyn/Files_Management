@@ -13,6 +13,7 @@ import { MailService } from "../mail/mail.service";
 import { RedisService } from "../redis/redis.service";
 import { DriveService } from "../drive/drive.service";
 import { StringValue } from "ms";
+import { AppConfigService } from "src/config/app_config.service";
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,8 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly mailService: MailService,
         private readonly redisService: RedisService,
-        private readonly driveService: DriveService
+        private readonly driveService: DriveService,
+        private readonly appConfigService: AppConfigService
     ) { }
 
     private async generateAccessToken(userId: string) {
@@ -33,16 +35,21 @@ export class AuthService {
     }
 
     private async generateRefreshToken(userId: string, expiresIn: StringValue) {
-        return this.jwtService.signAsync(
+        const jti = randomUUID();
+        const refreshToken = await this.jwtService.signAsync(
             {
                 sub: userId,
-                jti: randomUUID()
+                jti
             },
             {
                 secret: process.env.JWT_REFRESH_SECRET,
                 expiresIn,
             },
         );
+        return {
+            refreshToken,
+            jti,
+        };
     }
 
     async register(dto: RegisterDTO) {
@@ -93,7 +100,7 @@ export class AuthService {
             : "1d";
 
         const accessToken = await this.generateAccessToken(user.id);
-        const refreshToken = await this.generateRefreshToken(user.id, refreshExpiresIn);
+        const { refreshToken, jti } = await this.generateRefreshToken(user.id, refreshExpiresIn);
 
         console.log("LOGIN REFRESH:");
         console.log(refreshToken);
@@ -112,6 +119,7 @@ export class AuthService {
         const userAgent = req.headers["user-agent"] ?? "Unknown";
 
         await this.refreshTokenService.create({
+            jti,
             hashedRefreshToken,
             deviceName,
             ipAddress,
@@ -131,33 +139,27 @@ export class AuthService {
         };
     }
 
-    async refresh(userId: string, req: Request) {
+    async refresh(userId: string, jti: string, req: Request) {
         const refreshToken = req.cookies.refresh_token;
 
-        if (!refreshToken) {
-            throw new UnauthorizedException("Refresh token is not found!");
-        }
+        console.log("=== REFRESH ===");
+        console.log("JTI FROM JWT:", jti);
+        console.log("COOKIE REFRESH:", refreshToken);
 
-        const refreshTokens =
-            await this.refreshTokenService.findAllByUserId(userId);
+        const currentToken = await this.refreshTokenService.findByJti(jti);
 
-        let currentToken: RefreshToken | null = null;
-
-        for (const token of refreshTokens) {
-
-            const isMatched = await bcrypt.compare(
-                refreshToken,
-                token.hashedRefreshToken,
-            );
-
-            if (isMatched && !token.isRevoked) {
-                console.log("FOUND VALID TOKEN");
-                currentToken = token;
-            }
-        }
+        console.log("DB TOKEN:", currentToken?.jti);
 
         if (!currentToken) {
-            throw new UnauthorizedException("Invalid refresh token!");
+            throw new UnauthorizedException(
+                "Invalid refresh token!",
+            );
+        }
+
+        if (currentToken.userId !== userId) {
+            throw new UnauthorizedException(
+                "Invalid refresh token!",
+            );
         }
 
         if (currentToken.isRevoked) {
@@ -175,7 +177,11 @@ export class AuthService {
             `${remainingTime}ms` as StringValue;
 
         const newAccessToken = await this.generateAccessToken(userId);
-        const newRefreshToken = await this.generateRefreshToken(
+
+        const {
+            refreshToken: newRefreshToken,
+            jti: newJti,
+        } = await this.generateRefreshToken(
             userId,
             refreshExpiresIn,
         );
@@ -187,6 +193,7 @@ export class AuthService {
         });
 
         await this.refreshTokenService.create({
+            jti: newJti,
             hashedRefreshToken,
             deviceName: currentToken.deviceName,
             ipAddress: currentToken.ipAddress,
@@ -326,5 +333,70 @@ export class AuthService {
         return {
             message: "Password reset successfully!",
         };
+    }
+
+    async verifyPassword(userId: string, password: string) {
+        console.time("find-user");
+
+        const user = await this.userService.findByIdWithPassword(userId);
+
+        console.timeEnd("find-user");
+
+        if (!user) {
+            throw new NotFoundException("User not found!");
+        }
+
+        console.time("bcrypt");
+
+        const isMatched = await bcrypt.compare(
+            password,
+            user.hashedPassword
+        );
+
+        console.timeEnd("bcrypt");
+
+        if (!isMatched) {
+            throw new UnauthorizedException("Invalid password!");
+        }
+
+        console.time("sign-hidden-token");
+
+        const hiddenToken = await this.jwtService.signAsync(
+            {
+                sub: userId,
+                type: "hidden-access",
+            },
+            {
+                secret: this.appConfigService.JWT_HIDDEN_SECRET,
+            }
+        );
+
+        console.timeEnd("sign-hidden-token");
+
+        return {
+            hiddenToken,
+        };
+    }
+
+    async verifyHiddenToken(
+        userId: string,
+        hiddenToken?: string,
+    ): Promise<boolean> {
+        if (!hiddenToken) {
+            return false;
+        }
+
+        try {
+            const payload = await this.jwtService.verifyAsync(hiddenToken, {
+                secret: this.appConfigService.JWT_HIDDEN_SECRET,
+            });
+
+            return (
+                payload.sub === userId &&
+                payload.type === "hidden-access"
+            );
+        } catch {
+            return false;
+        }
     }
 }

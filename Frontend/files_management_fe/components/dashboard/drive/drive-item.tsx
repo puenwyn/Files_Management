@@ -26,7 +26,7 @@ export default function DriveItem({
 
     return (
         <Card
-            onDoubleClick={() => router.push(`/drives/${id}`)}
+            onClick={() => router.push(`/drives/${id}`)}
             className="p-3 bg-card cursor-pointer hover:bg-muted/30"
         >
             <div className="flex items-center justify-between">

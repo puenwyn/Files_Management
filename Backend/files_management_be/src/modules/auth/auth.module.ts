@@ -11,6 +11,7 @@ import { RefreshStrategy } from "./strategy/refresh-jwt.strategy";
 import { MailModule } from "../mail/mail.module";
 import { RedisModule } from "../redis/redis.module";
 import { DriveModule } from "../drive/drive.module";
+import { AppConfigModule } from "src/config/app_config.module";
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { DriveModule } from "../drive/drive.module";
                 },
             }),
         }),
+        AppConfigModule,
         UserModule,
         RefreshTokenModule,
         MailModule,
@@ -31,6 +33,6 @@ import { DriveModule } from "../drive/drive.module";
     ],
     controllers: [AuthController],
     providers: [AuthService, JwtStrategy, JwtAuthGuard, RefreshStrategy],
-    exports: [JwtModule]
+    exports: [JwtModule, AuthService]
 })
 export class AuthModule { }

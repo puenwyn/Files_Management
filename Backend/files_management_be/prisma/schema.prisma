@@ -42,6 +42,7 @@ model User {
 
 model RefreshToken {
   id                 String   @id @default(uuid())
+  jti                String   @unique
   hashedRefreshToken String   @db.VarChar(255)
   deviceName         String?  @db.VarChar(100)
   ipAddress          String?  @db.VarChar(45)

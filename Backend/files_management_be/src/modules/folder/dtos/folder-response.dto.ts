@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { FolderOwnerDTO } from "./folder-owner.dto";
 
 export class FolderResponseDTO {
     @ApiProperty()
@@ -11,6 +12,9 @@ export class FolderResponseDTO {
     parentFolderId!: string | null;
 
     @ApiProperty()
+    driveId!: string;
+
+    @ApiProperty()
     status!: string;
 
     @ApiProperty()
@@ -18,4 +22,9 @@ export class FolderResponseDTO {
 
     @ApiProperty()
     updatedAt!: Date;
+
+    @ApiProperty({
+        type: FolderOwnerDTO,
+    })
+    owner!: FolderOwnerDTO;
 }

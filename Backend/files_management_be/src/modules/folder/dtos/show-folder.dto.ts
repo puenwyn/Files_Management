@@ -8,5 +8,5 @@ export class ShowFolderDTO {
     })
     @IsString()
     @Length(6, 100)
-    password!: string;
+    comparePassword!: string;
 }
