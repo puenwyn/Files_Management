@@ -16,11 +16,13 @@ import AppContextMenuItem from "./context-menu-item";
 interface AppContextMenuProps {
     children: React.ReactNode;
     items: MenuItem[];
+    actions?: Record<string, () => void>
 }
 
 export default function AppContextMenu({
     children,
     items,
+    actions
 }: AppContextMenuProps) {
     return (
         <ContextMenu>
@@ -62,12 +64,9 @@ export default function AppContextMenu({
                                                                     <SubIcon className="size-4" />
                                                                 ) : undefined
                                                             }
-                                                            action={
-                                                                subItem.action
-                                                            }
-                                                            destructive={
-                                                                subItem.destructive
-                                                            }
+                                                            action={subItem.action}
+                                                            destructive={subItem.destructive}
+                                                            onClick={actions?.[subItem.action]}
                                                         />
                                                     </React.Fragment>
                                                 );
@@ -84,6 +83,7 @@ export default function AppContextMenu({
                                     }
                                     action={item.action}
                                     destructive={item.destructive}
+                                    onClick={item.onClick}
                                 />
                             )}
                         </React.Fragment>

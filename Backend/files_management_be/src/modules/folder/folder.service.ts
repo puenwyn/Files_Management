@@ -4,12 +4,14 @@ import { DriveService } from "../drive/drive.service";
 import { FolderStatus, PermissionType } from "@prisma/client";
 import * as bcrypt from 'bcrypt';
 import { FolderResponseDTO } from "./dtos/folder-response.dto";
+import { ACLService } from "../acl/acl.service";
 
 @Injectable()
 export class FolderService {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly driveService: DriveService
+        private readonly driveService: DriveService,
+        private readonly aclService: ACLService
     ) { }
 
     async checkDrive(driveId: string, userId: string) {
@@ -80,7 +82,7 @@ export class FolderService {
     }
 
     async renameFolder(userId: string, folderId: string, newFolderName: string): Promise<FolderResponseDTO> {
-        await this.checkFolderPermission(folderId, userId, PermissionType.EDIT);
+        await this.checkFolderAccess(folderId, userId, PermissionType.EDIT);
         const folder = await this.prisma.folder.update({
             where: {
                 id: folderId
@@ -156,7 +158,7 @@ export class FolderService {
     }
 
     async getFolderChildrens(folderId: string, userId: string, showHidden: boolean = false) {
-        await this.checkFolderPermission(folderId, userId, PermissionType.VIEW, showHidden);
+        await this.checkFolderAccess(folderId, userId, PermissionType.VIEW, showHidden);
         const folders = await this.prisma.folder.findMany({
             where: {
                 parentFolderId: folderId,
@@ -205,39 +207,23 @@ export class FolderService {
         return permissions[current] >= permissions[required];
     }
 
-    async checkFolderPermission(
+    async checkFolderAccess(
         folderId: string,
         userId: string,
         requiredPermission: PermissionType,
         showHidden: boolean = false
     ) {
-        const acl = await this.prisma.aCL.findFirst({
-            where: {
-                userId,
-                folderId,
-                folder: {
-                    isDeleted: false,
-                    drive: {
-                        isDeleted: false,
-                    },
-                },
+        const acl = await this.aclService.checkPermisison(folderId, userId, requiredPermission);
 
-            },
-            include: {
-                folder: true
-            }
-        });
-        if (!acl || acl.folder.isDeleted)
-            throw new NotFoundException("Folder is not found!");
-
-        if (!this.hasPermission(acl.permissionType, requiredPermission))
-            throw new ForbiddenException("You are forbidden!");
+        const folder = acl.folder;
+        if (showHidden && !acl.isOwner)
+            throw new ForbiddenException("Only the owner can access hidden folders!");
 
         const hasDeletedAncestor = await this.hasDeletedAncestor(folderId);
 
-        if (hasDeletedAncestor) {
+        if (hasDeletedAncestor)
             throw new NotFoundException("Folder is not found!");
-        }
+
         if (!showHidden) {
             const hasHiddenAncestor = await this.hasHiddenAncestor(folderId);
 
@@ -249,7 +235,7 @@ export class FolderService {
             }
         }
 
-        return acl.folder;
+        return folder;
     }
 
     async hasHiddenAncestor(folderId: string): Promise<boolean> {
@@ -373,7 +359,7 @@ export class FolderService {
     }
 
     async deleteFolder(userId: string, folderId: string): Promise<FolderResponseDTO> {
-        await this.checkFolderPermission(
+        await this.checkFolderAccess(
             folderId,
             userId,
             PermissionType.EDIT
@@ -447,5 +433,42 @@ export class FolderService {
                 fullName: folder.drive.user.fullName
             },
         }));
+    }
+
+    async getFolderPath(
+        folderId: string,
+        userId: string
+    ) {
+        await this.checkFolderAccess(
+            folderId,
+            userId,
+            PermissionType.VIEW
+        );
+        const result = await this.prisma.$queryRaw<
+            {
+                id: string;
+                folderName: string;
+                parentFolderId: string | null;
+                driveId: string;
+            }[]
+        >`
+        WITH RECURSIVE ancestors AS (
+            SELECT "id", "folderName", "parentFolderId", "driveId"
+            FROM "Folder"
+            WHERE "id" = ${folderId}
+            UNION ALL
+            SELECT f."id", f."folderName", f."parentFolderId", f."driveId"
+            FROM "Folder" f
+            INNER JOIN ancestors a ON f."id" = a."parentFolderId"
+        ) SELECT "id", "folderName", "parentFolderId", "driveId" FROM ancestors;`;
+
+        const folders = result.reverse();
+        return {
+            driveId: folders[0].driveId,
+            folders: folders.map((folder) => ({
+                id: folder.id,
+                folderName: folder.folderName,
+            })),
+        };
     }
 }

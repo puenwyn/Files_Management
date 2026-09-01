@@ -36,7 +36,7 @@ export default function AppDropdownMenu({
                             {item.subMenu ? (
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger className="px-3 py-1.5 cursor-pointer">
-                                        {Icon && (<Icon className="size-4" />)}{item.action}
+                                        {Icon && (<Icon className="size-4" />)}{item.label}
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuSubContent className="w-64">
                                         {item.subMenu.map(
@@ -52,9 +52,9 @@ export default function AppDropdownMenu({
                                                                     <SubIcon className="size-4" />
                                                                 ) : undefined
                                                             }
-                                                            action={subItem.action}
+                                                            action={subItem.label}
                                                             destructive={subItem.destructive}
-                                                            onClick={item.onClick}
+                                                            onClick={subItem.onClick}
                                                         />
                                                     </React.Fragment>
                                                 );
@@ -69,7 +69,7 @@ export default function AppDropdownMenu({
                                             <Icon className="size-4" />
                                         ) : undefined
                                     }
-                                    action={item.action}
+                                    action={item.label}
                                     destructive={item.destructive}
                                     onClick={item.onClick}
                                 />

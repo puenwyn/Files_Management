@@ -2,6 +2,9 @@ import AppIconButton from "@/components/dashboard/iconbutton/app-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
+import AppDropdownMenu from "../dropdown-menu/app-dropdown-menu";
+import { useTrashMenu } from "@/hooks/action/useTrashMenu.hook";
+import { useRouter } from "next/navigation";
 
 interface AppTableItemProps {
     id: string;
@@ -22,8 +25,13 @@ export default function AppTableItem({
     type = "folder",
     className
 }: AppTableItemProps) {
+
+    const { items } = useTrashMenu(id);
+    const router = useRouter();
+
     return (
         <div
+            onClick={() => router.push(`/files/${id}`)}
             className={cn(
                 "grid h-12 items-center border-b px-4",
                 "grid-cols-[minmax(200px,1fr)_180px_100px]",
@@ -59,7 +67,9 @@ export default function AppTableItem({
             </div>
 
             <div className="select-none">
-                <AppIconButton icon={EllipsisVertical} />
+                <AppDropdownMenu items={items}>
+                    <AppIconButton icon={EllipsisVertical} />
+                </AppDropdownMenu>
             </div>
         </div>
     )

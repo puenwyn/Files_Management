@@ -2,13 +2,11 @@
 import RenameFolderDialog from "@/components/shared/dialog/rename-dialog";
 import AppDropdownMenu from "@/components/shared/dropdown-menu/app-dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { toolMenuItems } from "@/constants/dashboard/menu";
-import { useDeleteFolder } from "@/hooks/folder/useDeleteFolder.hook";
+import { useFolderMenu } from "@/hooks/action/useFolderMenu.hook";
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface FolderItemProps {
     id: string;
@@ -16,8 +14,9 @@ interface FolderItemProps {
     driveId: string;
     parentFolderId: string | null;
     isHidden: boolean;
-    items?: number;
-    list?: string[];
+    // onRename?: () => void;
+    // onHide?: () => void;
+    // onDelete?: () => void;
 }
 
 export default function FolderItem({
@@ -26,44 +25,22 @@ export default function FolderItem({
     driveId,
     parentFolderId,
     isHidden,
-    items,
-    list
+    // onRename,
+    // onHide,
+    // onDelete
 }: FolderItemProps) {
 
     const router = useRouter();
 
-    const { deleteFolderMutation } = useDeleteFolder(
+    const {
+        items,
+        renameOpen,
+        setRenameOpen,
+    } = useFolderMenu(
         id,
         driveId,
         parentFolderId
     );
-
-    const [renameOpen, setRenameOpen] = useState(false);
-    const [hideOpen, setHideOpen] = useState(false);
-
-    const menuItems = toolMenuItems.map((item) => {
-        if (item.action === "Rename") {
-            return {
-                ...item,
-                onClick: () => setRenameOpen(true),
-            };
-        }
-
-        if (item.action === "Hide") {
-            return {
-                ...item,
-            };
-        }
-
-        if (item.action === "Delete") {
-            return {
-                ...item,
-                onClick: () => deleteFolderMutation.mutate(),
-            };
-        }
-
-        return item;
-    });
 
     return (
         <>
@@ -81,7 +58,7 @@ export default function FolderItem({
                         width={30}
                         height={30}
                     />
-                    <AppDropdownMenu items={menuItems}>
+                    <AppDropdownMenu items={items}>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -99,7 +76,6 @@ export default function FolderItem({
                 </div>
                 <span className="font-medium">{name}</span>
                 <br />
-                <span className="text-sm">{`${items} items`}</span>
             </div>
 
             <RenameFolderDialog

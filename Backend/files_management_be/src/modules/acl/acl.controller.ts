@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { ACLService } from "./acl.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ShareFolderDTO } from "./dtos/share-folder.dto";
@@ -6,7 +6,15 @@ import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-r
 
 @Controller("acl")
 export class ACLController {
-    constructor(private readonly aclService: ACLService) {}
+    constructor(private readonly aclService: ACLService) { }
+
+    @Get("shared")
+    @UseGuards(JwtAuthGuard)
+    async getSharedFolders(
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.aclService.getSharedFolders(req.user.id);
+    }
 
     @Post(":id/share")
     @UseGuards(JwtAuthGuard)

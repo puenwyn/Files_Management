@@ -137,4 +137,16 @@ export class FolderController {
     ) {
         return this.folderService.getTrash(req.user.id);
     }
+
+    @Get(":folderId/path")
+    @UseGuards(JwtAuthGuard)
+    async getFolderPath(
+        @Req() req: AuthenticatedRequest,
+        @Param("folderId") folderId: string,
+    ) {
+        return this.folderService.getFolderPath(
+            folderId,
+            req.user.id,
+        );
+    }
 }

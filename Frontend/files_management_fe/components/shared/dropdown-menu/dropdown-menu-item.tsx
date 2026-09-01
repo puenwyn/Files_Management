@@ -21,8 +21,10 @@ export default function AppDropdownMenuItem({
             onClick={onClick}
             className="px-3 py-1.5 cursor-pointer" variant={destructive ? "destructive" : "default"}
         >
-            <span>{icon}</span>
-            <span>{action}</span>
+            <span className="size-4 shrink-0 flex items-center justify-center">
+                {icon}
+            </span>
+            <span className="capitalize">{action}</span>
         </DropdownMenuItem>
     )
 }

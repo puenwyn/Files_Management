@@ -1,7 +1,9 @@
-import { ArrowDownToLine, ExternalLink, EyeClosed, FileUp, FolderUp, Info, Link2, LucideIcon, PenLine, Trash2 } from "lucide-react";
+import { ArrowDownToLine, ExternalLink, EyeClosed, FileUp, FolderUp, Info, Link2, LucideIcon, PenLine, Recycle, Trash2 } from "lucide-react";
+import { ActionType } from "../action-type";
 
 export type MenuItem = {
     icon?: LucideIcon;
+    label: string;
     action: string;
     separator?: boolean;
     destructive?: boolean;
@@ -13,38 +15,46 @@ export type MenuItem = {
 export const toolMenuItems: MenuItem[] = [
     {
         icon: ArrowDownToLine,
-        action: "Download",
+        label: "Download",
+        action: ActionType.DOWNLOAD,
     },
     {
         icon: PenLine,
-        action: "Rename",
+        label: "Rename",
+        action: ActionType.RENAME,
     },
     {
         icon: EyeClosed,
-        action: "Hide"
+        label: "Hide",
+        action: ActionType.HIDE
     },
     {
         icon: ExternalLink,
-        action: "Share",
+        label: "Share",
+        action: ActionType.SHARE,
         separator: true,
 
         subMenu: [
             {
                 icon: Link2,
-                action: "Share link",
+                label: "Share Link",
+                action: ActionType.SHARE_LINK,
             },
             {
-                action: "Manage access",
+                label: "Manage Access",
+                action: ActionType.MANAGE_ACCESS,
             },
         ],
     },
     {
         icon: Info,
-        action: "Information",
+        label: "Information",
+        action: ActionType.INFORMATION,
     },
     {
         icon: Trash2,
-        action: "Delete",
+        label: "Delete",
+        action: ActionType.DELETE,
         separator: true,
         destructive: true,
     },
@@ -53,15 +63,31 @@ export const toolMenuItems: MenuItem[] = [
 export const bgroundMenuItems: MenuItem[] = [
     {
         icon: ArrowDownToLine,
+        label: "Download",
         action: "New Folder",
     },
     {
         icon: FolderUp,
+        label: "Download",
         action: "Upload File",
         separator: true
     },
     {
         icon: FileUp,
+        label: "Download",
         action: "Upload Folder",
+    },
+]
+
+export const trashMenuItems: MenuItem[] = [
+    {
+        icon: Recycle,
+        label: "Restore",
+        action: ActionType.RESTORE,
+    },
+    {
+        icon: Trash2,
+        label: "Delete",
+        action: ActionType.DELETE,
     },
 ]
