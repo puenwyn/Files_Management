@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Patch, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Patch, Query, Req, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import { UpdateProfileDTO } from "./dtos/update-profile.dto";
@@ -22,5 +22,14 @@ export class UserController {
         @Body() dto: UpdateProfileDTO
     ) {
         return this.userService.updateProfile(req.user.id, dto);
+    }
+
+    @Get("shareable")
+    @UseGuards(JwtAuthGuard)
+    async findShareableUsers(
+        @Req() req: AuthenticatedRequest,
+        @Query("keyword") keyword?: string
+    ) {
+        return this.userService.findShareableUsers(req.user.id, keyword);
     }
 }

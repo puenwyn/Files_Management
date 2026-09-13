@@ -1,4 +1,5 @@
 "use client"
+import { ShareDialog } from "@/components/share/share-dialog/share-dialog";
 import RenameFolderDialog from "@/components/shared/dialog/rename-dialog";
 import AppDropdownMenu from "@/components/shared/dropdown-menu/app-dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ export default function FolderItem({
         items,
         renameOpen,
         setRenameOpen,
+        shareOpen,
+        setShareOpen,
     } = useFolderMenu(
         id,
         driveId,
@@ -84,6 +87,14 @@ export default function FolderItem({
                 parentFolderId={parentFolderId}
                 open={renameOpen}
                 onOpenChange={setRenameOpen}
+            />
+
+            <ShareDialog
+                open={shareOpen}
+                onOpenChange={setShareOpen}
+                resourceId={id}
+                resourceName={name}
+                resourceType="folder"
             />
         </>
     )

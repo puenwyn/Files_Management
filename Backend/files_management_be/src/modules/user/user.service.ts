@@ -3,6 +3,7 @@ import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateProfileDTO } from "./dtos/update-profile.dto";
 import { ProfileResponseDTO } from "./dtos/profile-response.dto";
+import { ShareableUserResponseDTO } from "./dtos/shareable-user-response.dto";
 
 @Injectable()
 export class UserService {
@@ -109,5 +110,41 @@ export class UserService {
                 hashedPassword: true,
             },
         });
+    }
+
+    async findShareableUsers(
+        userId: string,
+        keyword: string | undefined
+    ): Promise<ShareableUserResponseDTO[]> {
+        const users = await this.prisma.user.findMany({
+            where: {
+                id: {
+                    not: userId
+                },
+                ...(keyword?.trim() ? {
+                    OR: [
+                        {
+                            fullName: {
+                                contains: keyword.trim(),
+                                mode: "insensitive",
+                            },
+                        },
+                        {
+                            email: {
+                                contains: keyword.trim(),
+                                mode: "insensitive",
+                            },
+                        },
+                    ],
+                } : {}),
+            },
+            select: {
+                id: true,
+                fullName: true,
+                email: true
+            },
+            take: 5
+        });
+        return users;
     }
 }

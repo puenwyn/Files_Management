@@ -112,6 +112,7 @@ export class FolderService {
                 id: folder.drive.user.id,
                 fullName: folder.drive.user.fullName
             },
+            permissionType: null
         };
     }
 
@@ -192,7 +193,7 @@ export class FolderService {
                 owner: {
                     id: folder.drive.user.id,
                     fullName: folder.drive.user.fullName
-                }
+                },
             })),
             showHidden
         }
@@ -291,6 +292,7 @@ export class FolderService {
                 id: folder.drive.user.id,
                 fullName: folder.drive.user.fullName
             },
+            permissionType: null
         };
     }
 
@@ -331,6 +333,7 @@ export class FolderService {
                 id: folderShow.drive.user.id,
                 fullName: folderShow.drive.user.fullName,
             },
+            permissionType: null
         };
     }
 
@@ -394,6 +397,7 @@ export class FolderService {
                 id: folder.drive.user.id,
                 fullName: folder.drive.user.fullName
             },
+            permissionType: null
         };
     }
 
@@ -432,6 +436,7 @@ export class FolderService {
                 id: folder.drive.user.id,
                 fullName: folder.drive.user.fullName
             },
+            permissionType: null
         }));
     }
 

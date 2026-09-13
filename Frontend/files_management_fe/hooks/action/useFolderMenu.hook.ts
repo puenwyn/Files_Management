@@ -11,6 +11,7 @@ export function useFolderMenu(
 
     const [renameOpen, setRenameOpen] = useState(false);
     const [hideOpen, setHideOpen] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
 
     const {
         deleteFolderMutation,
@@ -62,9 +63,7 @@ export function useFolderMenu(
                 case ActionType.MANAGE_ACCESS:
                     return {
                         ...newItem,
-                        onClick: () => {
-                            console.log("Manage access");
-                        },
+                        onClick: () => setShareOpen(!shareOpen),
                     };
 
                 case ActionType.INFORMATION:
@@ -95,6 +94,8 @@ export function useFolderMenu(
         setRenameOpen,
         hideOpen,
         setHideOpen,
+        shareOpen,
+        setShareOpen,
         isDeleteLoading,
         isDeleteError,
         errorLoading,

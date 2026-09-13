@@ -3,12 +3,13 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { FolderService } from "../folder/folder.service";
 import { PermissionType } from "@prisma/client";
 import { SharedFolderResponseDTO } from "./dtos/share-folder-response.dto";
+import { FolderResponseDTO } from "../folder/dtos/folder-response.dto";
+import { ACLUserResponseDTO } from "./dtos/share-user-response.dto";
 
 @Injectable()
 export class ACLService {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly folderService: FolderService
     ) { }
 
     private hasPermission(current: PermissionType, required: PermissionType): boolean {
@@ -49,26 +50,66 @@ export class ACLService {
         return acl;
     }
 
-    async getSharedFolders(userId: string): Promise<SharedFolderResponseDTO[]> {
-        const acls = await this.prisma.aCL.findMany({
-            where: {
-                userId,
-                isOwner: false,
-                folder: {
-                    isDeleted: false,
-                }
+    async getSharedFolders(userId: string): Promise<FolderResponseDTO[]> {
+        const folders = await this.prisma.$queryRaw<
+            {
+                id: string;
+                folderName: string;
+                parentFolderId: string | null;
+                driveId: string;
+                status: "SHOW" | "HIDDEN";
+                createdAt: Date;
+                updatedAt: Date;
+                permissionType: PermissionType;
+                ownerId: string;
+                ownerFullName: string;
+            }[]
+        >`
+        WITH RECURSIVE ancestors AS (
+            SELECT f.id AS "folderId", f."parentFolderId" AS "ancestorId"
+            FROM "Folder" f
+            UNION ALL
+            SELECT a."folderId", parent."parentFolderId"
+            FROM ancestors a
+            INNER JOIN "Folder" parent ON parent.id = a."ancestorId"
+            WHERE a."ancestorId" IS NOT NULL
+        )
+        SELECT
+            f.id, f."folderName", f."parentFolderId", f."driveId", f.status, f."createdAt", f."updatedAt",
+            acl."permissionType",
+            owner.id AS "ownerId",
+            owner."fullName" AS "ownerFullName"
+        FROM "ACL" acl
+        INNER JOIN "Folder" f ON f.id = acl."folderId"
+        INNER JOIN "Drive" d ON d.id = f."driveId"
+        INNER JOIN "User" owner ON owner.id = d."userId"
+        WHERE acl."userId" = ${userId}
+            AND f."isDeleted" = false
+            AND d."isDeleted" = false
+            AND d."userId" != ${userId}
+            AND NOT EXISTS (
+                SELECT 1 FROM ancestors a
+                INNER JOIN "ACL" ancestor_acl
+                    ON ancestor_acl."folderId" = a."ancestorId"
+                    AND ancestor_acl."userId" = ${userId}
+                WHERE
+                    a."folderId" = f.id
+            )
+    `;
+
+        return folders.map((folder) => ({
+            id: folder.id,
+            folderName: folder.folderName,
+            parentFolderId: folder.parentFolderId,
+            driveId: folder.driveId,
+            status: folder.status,
+            createdAt: folder.createdAt,
+            updatedAt: folder.updatedAt,
+            owner: {
+                id: folder.ownerId,
+                fullName: folder.ownerFullName,
             },
-            include: {
-                folder: true
-            }
-        });
-        return acls.map((acl) => ({
-            id: acl.id,
-            folderId: acl.folderId,
-            folderName: acl.folder.folderName,
-            parentFolderId: acl.folder.parentFolderId,
-            driveId: acl.folder.driveId,
-            permissionType: acl.permissionType,
+            permissionType: folder.permissionType,
         }));
     }
 
@@ -120,4 +161,121 @@ export class ACLService {
             },
         })
     }
+
+    async getSharedFolderChildren(
+        folderId: string,
+        userId: string,
+    ) {
+        // Kiểm tra user có được share folder cha hay không
+        const acl = await this.prisma.aCL.findUnique({
+            where: {
+                userId_folderId: {
+                    userId,
+                    folderId,
+                },
+            },
+            select: {
+                permissionType: true,
+            },
+        });
+
+        if (!acl) {
+            throw new ForbiddenException(
+                "You don't have permission to access this folder!",
+            );
+        }
+
+        // Chỉ lấy những folder con trực tiếp
+        // và folder con đó cũng phải được share cho user
+        const folders = await this.prisma.folder.findMany({
+            where: {
+                parentFolderId: folderId,
+                isDeleted: false,
+                status: "SHOW",
+
+                acls: {
+                    some: {
+                        userId,
+                        isOwner: false,
+                    },
+                },
+            },
+            select: {
+                id: true,
+                folderName: true,
+                parentFolderId: true,
+                driveId: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true,
+
+                drive: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
+
+        return folders.map((folder) => ({
+            id: folder.id,
+            folderName: folder.folderName,
+            parentFolderId: folder.parentFolderId,
+            driveId: folder.driveId,
+            status: folder.status,
+            createdAt: folder.createdAt,
+            updatedAt: folder.updatedAt,
+            owner: {
+                id: folder.drive.user.id,
+                fullName: folder.drive.user.fullName,
+            },
+        }));
+    }
+
+    async getFolderUsers(
+        folderId: string,
+        userId: string,
+    ): Promise<ACLUserResponseDTO[]> {
+        // Người gọi phải có quyền SHARE mới được xem danh sách người được share
+        await this.checkPermisison(
+            folderId,
+            userId,
+            PermissionType.SHARE,
+        );
+
+        const acls = await this.prisma.aCL.findMany({
+            where: {
+                folderId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
+
+        return acls.map((acl) => ({
+            id: acl.user.id,
+            fullName: acl.user.fullName,
+            email: acl.user.email,
+            permissionType: acl.permissionType,
+            isOwner: acl.isOwner,
+        }));
+    }
+
 }

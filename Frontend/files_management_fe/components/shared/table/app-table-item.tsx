@@ -66,7 +66,10 @@ export default function AppTableItem({
                 <p className="truncate">{size}</p>
             </div>
 
-            <div className="select-none">
+            <div
+                className="select-none"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <AppDropdownMenu items={items}>
                     <AppIconButton icon={EllipsisVertical} />
                 </AppDropdownMenu>

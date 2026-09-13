@@ -1,6 +1,7 @@
 import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
+import { ShareableUserListResponse, shareableUserListResponseSchema } from "@/schemas/user/shareable-user-response.schema";
 import { UpdateProfileResponse, updateProfileResponseSchema } from "@/schemas/user/update-profile-response.schema";
 import { UpdateProfileRequest } from "@/schemas/user/update-profile.schema";
 import axios from "axios";
@@ -22,6 +23,20 @@ export const userService = {
                     throw new Error("User not found");
                 }
             }
+            throw new Error("Can't connect to server")
+        }
+    },
+
+    findShareableUsers: async (keyword?: string): Promise<ShareableUserListResponse> => {
+        try {
+            const response = await axiosClient.get(
+                "/user/shareable",
+                {
+                    params: keyword?.trim() ? { keyword: keyword.trim() } : undefined
+                });
+            const result = createApiResponseSchema(shareableUserListResponseSchema).parse(response.data);
+            return result.data ?? [];
+        } catch (error) {
             throw new Error("Can't connect to server")
         }
     }

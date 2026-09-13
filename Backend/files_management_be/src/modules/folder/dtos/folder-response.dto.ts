@@ -1,5 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { FolderOwnerDTO } from "./folder-owner.dto";
+import { FolderStatus, PermissionType } from "@prisma/client";
 
 export class FolderResponseDTO {
     @ApiProperty()
@@ -14,8 +15,10 @@ export class FolderResponseDTO {
     @ApiProperty()
     driveId!: string;
 
-    @ApiProperty()
-    status!: string;
+    @ApiProperty({
+        enum: FolderStatus,
+    })
+    status!: FolderStatus;
 
     @ApiProperty()
     createdAt!: Date;
@@ -27,4 +30,10 @@ export class FolderResponseDTO {
         type: FolderOwnerDTO,
     })
     owner!: FolderOwnerDTO;
+
+    @ApiPropertyOptional({
+        enum: PermissionType,
+        nullable: true,
+    })
+    permissionType!: PermissionType | null;
 }
