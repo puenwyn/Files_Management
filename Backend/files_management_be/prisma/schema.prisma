@@ -23,6 +23,15 @@ enum PermissionType {
   SHARE
 }
 
+enum ActivityAction {
+  CREATE
+  UPLOAD
+  RENAME
+  DELETE
+  SHARE
+  CHANGE_PERMISSION
+}
+
 model User {
   id             String         @id @default(uuid())
   fullName       String         @db.VarChar(100)
@@ -38,6 +47,7 @@ model User {
   refreshTokens  RefreshToken[]
   drives         Drive[]
   acls           ACL[]
+  activities     Activity[]
 }
 
 model RefreshToken {
@@ -89,10 +99,11 @@ model Folder {
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
-  drive        Drive    @relation(fields: [driveId], references: [id], onDelete: Cascade)
-  parentFolder Folder?  @relation("FolderChildren", fields: [parentFolderId], references: [id])
-  childFolders Folder[] @relation("FolderChildren")
+  drive        Drive      @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  parentFolder Folder?    @relation("FolderChildren", fields: [parentFolderId], references: [id])
+  childFolders Folder[]   @relation("FolderChildren")
   acls         ACL[]
+  activities   Activity[]
 
   @@index([parentFolderId])
   @@index([driveId])
@@ -112,4 +123,20 @@ model ACL {
 
   @@unique([userId, folderId])
   @@index([folderId])
+}
+
+model Activity {
+  id        String         @id @default(uuid())
+  userId    String
+  action    ActivityAction
+  folderId  String?
+  metadata  Json?
+  createdAt DateTime       @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([folderId])
+  @@index([createdAt])
 }
