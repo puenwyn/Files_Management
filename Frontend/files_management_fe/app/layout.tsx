@@ -4,6 +4,7 @@ import "./globals.css";
 import TanstackQueryProvider from "@/lib/tanstack-query/provider";
 import AppThemeProvider from "@/lib/theme/provider";
 import { Toast, Toaster } from "@/components/ui/toast";
+import { WebSocketProvider } from "@/infrastructure/websocket/websocket-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,10 +29,12 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AppThemeProvider>
-          <TanstackQueryProvider>
-            {children}
-            <Toaster />
-          </TanstackQueryProvider>
+          <WebSocketProvider>
+            <TanstackQueryProvider>
+              {children}
+              <Toaster />
+            </TanstackQueryProvider>
+          </WebSocketProvider>
         </AppThemeProvider>
       </body>
     </html>

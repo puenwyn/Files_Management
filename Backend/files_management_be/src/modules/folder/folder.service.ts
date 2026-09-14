@@ -1,13 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DriveService } from "../drive/drive.service";
-import { ActivityAction, FolderStatus, PermissionType } from "@prisma/client";
+import { ActivityAction, FolderStatus, Notification, NotificationType, PermissionType, ResourceType } from "@prisma/client";
 import * as bcrypt from 'bcrypt';
 import { FolderResponseDTO } from "./dtos/folder-response.dto";
 import { ACLService } from "../acl/acl.service";
 import { ActivityService } from "../activity/activity.service";
 import { folderWithOwnerInclude } from "./constants/folder.include";
 import { FolderWithOwner } from "./types/folder-with-owner.type";
+import { NotificationService } from "../notification/notification.service";
 
 @Injectable()
 export class FolderService {
@@ -15,7 +16,8 @@ export class FolderService {
         private readonly prisma: PrismaService,
         private readonly driveService: DriveService,
         private readonly aclService: ACLService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly notificationService: NotificationService
     ) { }
 
     private mappingFolderResponse(
@@ -77,7 +79,7 @@ export class FolderService {
             await this.checkDrive(driveId, userId);
         }
 
-        await this.prisma.$transaction(async (tx) => {
+        const result = await this.prisma.$transaction(async (tx) => {
             const folder = await tx.folder.create({
                 data: {
                     folderName,
@@ -97,8 +99,52 @@ export class FolderService {
                 folder.id,
                 { action: ActivityAction.CREATE, metadata: { folderName } }
             );
-            return folder;
+            let notification: Notification | undefined;
+            let receiverId: string | undefined;
+
+            if (parentFolderId) {
+                const ownerACL = await tx.aCL.findFirst({
+                    where: {
+                        folderId: parentFolderId,
+                        isOwner: true,
+                    },
+                    select: {
+                        userId: true,
+                    },
+                });
+
+                if (ownerACL && ownerACL.userId !== userId) {
+                    receiverId = ownerACL.userId;
+
+                    notification =
+                        await this.notificationService.createNotification(
+                            tx,
+                            ownerACL.userId,
+                            userId,
+                            parentFolderId,
+                            ResourceType.FOLDER,
+                            {
+                                type: NotificationType.CREATE,
+                                metadata: {
+                                    resourceName: folderName,
+                                },
+                            },
+                        );
+                }
+            }
+
+            return {
+                folder,
+                notification,
+                receiverId,
+            };
         });
+        if (result.notification && result.receiverId) {
+            this.notificationService.sendRealtimeNotification(
+                result.receiverId,
+                result.notification,
+            );
+        }
         return {
             message: "Created folder successfully"!
         };
@@ -107,8 +153,8 @@ export class FolderService {
     async renameFolder(userId: string, folderId: string, newFolderName: string): Promise<FolderResponseDTO> {
         await this.checkFolderAccess(folderId, userId, PermissionType.EDIT);
 
-        const folder = await this.prisma.$transaction(async (tx) => {
-            const oldFolder = await this.prisma.folder.findUnique({
+        const result = await this.prisma.$transaction(async (tx) => {
+            const oldFolder = await tx.folder.findUnique({
                 where: { id: folderId, status: FolderStatus.SHOW, isDeleted: false }
             });
             if (!oldFolder) throw new NotFoundException("Folder is not found!");
@@ -129,17 +175,57 @@ export class FolderService {
                     },
                 },
             );
-            return folder;
+            const ownerACL = await tx.aCL.findFirst({
+                where: {
+                    folderId,
+                    isOwner: true
+                },
+                select: {
+                    userId: true
+                }
+            });
+
+            let notification: Notification | undefined;
+
+            if (ownerACL && ownerACL.userId !== userId) {
+                notification = await this.notificationService.createNotification(
+                    tx,
+                    ownerACL.userId,
+                    userId,
+                    folderId,
+                    ResourceType.FOLDER,
+                    {
+                        type: NotificationType.RENAME,
+                        metadata: {
+                            resourceName: newFolderName,
+                            oldName: oldFolder.folderName,
+                        }
+                    }
+                );
+            }
+
+            return {
+                folder,
+                notification,
+                ownerId: ownerACL?.userId
+            };
         });
-        const result = await this.prisma.folder.findUnique({
-            where: { id: folder.id },
+        if (result.notification && result.ownerId) {
+            this.notificationService.sendRealtimeNotification(
+                result.ownerId,
+                result.notification
+            );
+        }
+
+        const folder = await this.prisma.folder.findUnique({
+            where: { id: result.folder.id },
             include: folderWithOwnerInclude,
         });
-        if (!result) {
+        if (!folder) {
             throw new NotFoundException("Folder is not found!");
         }
 
-        return this.mappingFolderResponse(result);
+        return this.mappingFolderResponse(folder);
     }
 
     async getDriveFolders(userId: string, driveId: string, showHidden: boolean = false) {

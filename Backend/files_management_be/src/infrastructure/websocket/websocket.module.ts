@@ -1,4 +1,10 @@
 import { Module } from '@nestjs/common';
+import { AppWebSocketGateway } from './websocket.gateway';
+import { AuthModule } from 'src/modules/auth/auth.module';
 
-@Module({})
-export class WebsocketModule {}
+@Module({
+    imports: [AuthModule],
+    providers: [AppWebSocketGateway],
+    exports: [AppWebSocketGateway]
+})
+export class WebSocketModule { }

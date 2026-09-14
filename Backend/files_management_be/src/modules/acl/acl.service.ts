@@ -1,19 +1,21 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { FolderService } from "../folder/folder.service";
-import { ActivityAction, PermissionType, Prisma } from "@prisma/client";
+import { ActivityAction, NotificationType, PermissionType, Prisma, ResourceType } from "@prisma/client";
 import { SharedFolderResponseDTO } from "./dtos/share-folder-response.dto";
 import { FolderResponseDTO } from "../folder/dtos/folder-response.dto";
 import { ACLUserResponseDTO } from "./dtos/share-user-response.dto";
 import { ActivityService } from "../activity/activity.service";
 import { UserService } from "../user/user.service";
+import { NotificationService } from "../notification/notification.service";
 
 @Injectable()
 export class ACLService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly userService: UserService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly notificationService: NotificationService
     ) { }
 
     async createACL(
@@ -148,7 +150,16 @@ export class ACLService {
         const targetUser = await this.userService.findById(targetUserId);
         if (!targetUser) throw new NotFoundException("User is not found!");
 
-        return this.prisma.$transaction(async (tx) => {
+        const folder = await this.prisma.folder.findUnique({
+            where: { id: folderId },
+            select: {
+                folderName: true
+            }
+        });
+
+        if (!folder) throw new NotFoundException("Folder is not found!");
+
+        const result = await this.prisma.$transaction(async (tx) => {
             const userACL = await tx.aCL.findUnique({
                 where: {
                     userId_folderId: {
@@ -176,7 +187,24 @@ export class ACLService {
                         }
                     }
                 );
-                return acl;
+                const notification = await this.notificationService.createNotification(
+                    tx,
+                    targetUserId,
+                    userId,
+                    folderId,
+                    ResourceType.FOLDER,
+                    {
+                        type: NotificationType.SHARE,
+                        metadata: {
+                            resourceName: folder.folderName,
+                            permission
+                        }
+                    }
+                );
+                return {
+                    acl,
+                    notification
+                };
             }
             if (userACL.permissionType === permission)
                 throw new ConflictException("User has already permission for this folder");
@@ -205,8 +233,31 @@ export class ACLService {
                     }
                 }
             );
-            return acl;
+            const notification = await this.notificationService.createNotification(
+                tx,
+                targetUserId,
+                userId,
+                folderId,
+                ResourceType.FOLDER,
+                {
+                    type: NotificationType.CHANGE_PERMISSION,
+                    metadata: {
+                        resourceName: folder.folderName,
+                        oldPermission: userACL.permissionType,
+                        newPermission: permission
+                    }
+                }
+            );
+            return {
+                acl,
+                notification
+            };
         });
+        this.notificationService.sendRealtimeNotification(
+            targetUserId,
+            result.notification
+        );
+        return result.acl
     }
 
     async getSharedFolderChildren(

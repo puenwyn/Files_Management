@@ -14,6 +14,7 @@ import { RedisService } from "../redis/redis.service";
 import { DriveService } from "../drive/drive.service";
 import { StringValue } from "ms";
 import { AppConfigService } from "src/config/app_config.service";
+import { JwtPayload } from "./interfaces/jwt-payload.interface";
 
 @Injectable()
 export class AuthService {
@@ -31,6 +32,12 @@ export class AuthService {
         return this.jwtService.signAsync({
             sub: userId,
             jti: randomUUID()
+        });
+    }
+
+    async verifyAccessToken(token: string): Promise<JwtPayload> {
+        return this.jwtService.verifyAsync<JwtPayload>(token, {
+            secret: this.appConfigService.JWT_ACCESS_SECRET,
         });
     }
 
