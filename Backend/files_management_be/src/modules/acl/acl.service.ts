@@ -1,16 +1,39 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { FolderService } from "../folder/folder.service";
-import { PermissionType } from "@prisma/client";
+import { ActivityAction, PermissionType, Prisma } from "@prisma/client";
 import { SharedFolderResponseDTO } from "./dtos/share-folder-response.dto";
 import { FolderResponseDTO } from "../folder/dtos/folder-response.dto";
 import { ACLUserResponseDTO } from "./dtos/share-user-response.dto";
+import { ActivityService } from "../activity/activity.service";
+import { UserService } from "../user/user.service";
 
 @Injectable()
 export class ACLService {
     constructor(
         private readonly prisma: PrismaService,
+        private readonly userService: UserService,
+        private readonly activityService: ActivityService
     ) { }
+
+    async createACL(
+        tx: Prisma.TransactionClient | PrismaService,
+        data: {
+            userId: string;
+            folderId: string;
+            permissionType: PermissionType;
+            isOwner?: boolean;
+        },
+    ) {
+        return tx.aCL.create({
+            data: {
+                userId: data.userId,
+                folderId: data.folderId,
+                permissionType: data.permissionType,
+                isOwner: data.isOwner ?? false,
+            },
+        });
+    }
 
     private hasPermission(current: PermissionType, required: PermissionType): boolean {
         const permissions = {
@@ -122,44 +145,68 @@ export class ACLService {
         await this.checkPermisison(folderId, userId, PermissionType.SHARE);
         if (userId === targetUserId) throw new BadRequestException("You can't share to yourself");
 
-        const targetUser = await this.prisma.user.findUnique({
-            where: { id: targetUserId }
-        });
+        const targetUser = await this.userService.findById(targetUserId);
         if (!targetUser) throw new NotFoundException("User is not found!");
 
-        const userACL = await this.prisma.aCL.findUnique({
-            where: {
-                userId_folderId: {
-                    userId: targetUserId,
-                    folderId
+        return this.prisma.$transaction(async (tx) => {
+            const userACL = await tx.aCL.findUnique({
+                where: {
+                    userId_folderId: {
+                        userId: targetUserId,
+                        folderId
+                    }
                 }
-            }
-        });
-        if (!userACL) {
-            return this.prisma.aCL.create({
-                data: {
-                    userId: targetUserId,
-                    folderId,
-                    permissionType: permission,
-                    isOwner: false,
-                },
             });
-        }
-
-        if (userACL.permissionType === permission)
-            throw new ConflictException("User has already permission for this folder");
-
-        return this.prisma.aCL.update({
-            where: {
-                userId_folderId: {
+            if (!userACL) {
+                const acl = await this.createACL(tx, {
                     userId: targetUserId,
                     folderId,
+                    permissionType: permission
+                });
+                await this.activityService.createActivity(
+                    tx,
+                    userId,
+                    folderId,
+                    {
+                        action: ActivityAction.SHARE,
+                        metadata: {
+                            targetUserId: targetUser.id,
+                            targetUserName: targetUser.fullName,
+                            permission,
+                        }
+                    }
+                );
+                return acl;
+            }
+            if (userACL.permissionType === permission)
+                throw new ConflictException("User has already permission for this folder");
+            const acl = await tx.aCL.update({
+                where: {
+                    userId_folderId: {
+                        userId: targetUserId,
+                        folderId
+                    }
                 },
-            },
-            data: {
-                permissionType: permission,
-            },
-        })
+                data: {
+                    permissionType: permission
+                }
+            });
+            await this.activityService.createActivity(
+                tx,
+                userId,
+                folderId,
+                {
+                    action: ActivityAction.CHANGE_PERMISSION,
+                    metadata: {
+                        targetUserId: targetUser.id,
+                        targetUserName: targetUser.fullName,
+                        oldPermission: userACL.permissionType,
+                        newPermission: permission
+                    }
+                }
+            );
+            return acl;
+        });
     }
 
     async getSharedFolderChildren(

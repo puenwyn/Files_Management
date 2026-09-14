@@ -8,7 +8,7 @@ import { DriveModule } from "./modules/drive/drive.module";
 import { FolderModule } from "./modules/folder/folder.module";
 import { ACLModule } from "./modules/acl/acl.module";
 import { LoggerModule } from './infrastructure/logger/logger.module';
-import { ActivityModule } from './activity/activity.module';
+import { ActivityModule } from "./modules/activity/activity.module";
 
 @Module({
     imports: [AppConfigModule, PrismaModule, AuthModule, DriveModule, FolderModule, ACLModule, LoggerModule, ActivityModule],

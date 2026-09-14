@@ -12,6 +12,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ResourceType {
+  FOLDER
+  FILE
+}
+
 enum FolderStatus {
   SHOW
   HIDDEN
@@ -32,22 +37,33 @@ enum ActivityAction {
   CHANGE_PERMISSION
 }
 
+enum NotificationType {
+  SHARE
+  CHANGE_PERMISSION
+  CREATE
+  UPLOAD
+  RENAME
+  DELETE
+}
+
 model User {
-  id             String         @id @default(uuid())
-  fullName       String         @db.VarChar(100)
-  username       String         @unique @db.VarChar(100)
-  hashedPassword String         @db.VarChar(255)
-  email          String         @unique @db.VarChar(100)
-  phoneNumber    String?        @db.VarChar(10)
-  bio            String?        @db.VarChar(500)
-  dob            DateTime?      @db.Date
-  gender         String?        @db.VarChar(10)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  refreshTokens  RefreshToken[]
-  drives         Drive[]
-  acls           ACL[]
-  activities     Activity[]
+  id                    String         @id @default(uuid())
+  fullName              String         @db.VarChar(100)
+  username              String         @unique @db.VarChar(100)
+  hashedPassword        String         @db.VarChar(255)
+  email                 String         @unique @db.VarChar(100)
+  phoneNumber           String?        @db.VarChar(10)
+  bio                   String?        @db.VarChar(500)
+  dob                   DateTime?      @db.Date
+  gender                String?        @db.VarChar(10)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  refreshTokens         RefreshToken[]
+  drives                Drive[]
+  acls                  ACL[]
+  activities            Activity[]
+  notificationsReceived Notification[] @relation("NotificationReceiver")
+  notificationsSent     Notification[] @relation("NotificationActor")
 }
 
 model RefreshToken {
@@ -139,4 +155,23 @@ model Activity {
   @@index([userId])
   @@index([folderId])
   @@index([createdAt])
+}
+
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String
+  actorUserId  String
+  type         NotificationType
+  resourceId   String
+  resourceType ResourceType
+  metadata     Json?
+  isRead       Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  user  User @relation("NotificationReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  actor User @relation("NotificationActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([resourceId, resourceType])
 }

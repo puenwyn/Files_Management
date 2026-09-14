@@ -1,18 +1,42 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DriveService } from "../drive/drive.service";
-import { FolderStatus, PermissionType } from "@prisma/client";
+import { ActivityAction, FolderStatus, PermissionType } from "@prisma/client";
 import * as bcrypt from 'bcrypt';
 import { FolderResponseDTO } from "./dtos/folder-response.dto";
 import { ACLService } from "../acl/acl.service";
+import { ActivityService } from "../activity/activity.service";
+import { folderWithOwnerInclude } from "./constants/folder.include";
+import { FolderWithOwner } from "./types/folder-with-owner.type";
 
 @Injectable()
 export class FolderService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly driveService: DriveService,
-        private readonly aclService: ACLService
+        private readonly aclService: ACLService,
+        private readonly activityService: ActivityService
     ) { }
+
+    private mappingFolderResponse(
+        folder: FolderWithOwner,
+        permissionType: PermissionType | null = null
+    ): FolderResponseDTO {
+        return {
+            id: folder.id,
+            folderName: folder.folderName,
+            parentFolderId: folder.parentFolderId,
+            driveId: folder.driveId,
+            status: folder.status,
+            createdAt: folder.createdAt,
+            updatedAt: folder.updatedAt,
+            owner: {
+                id: folder.drive.user.id,
+                fullName: folder.drive.user.fullName,
+            },
+            permissionType,
+        }
+    }
 
     async checkDrive(driveId: string, userId: string) {
         return this.driveService.checkDriveOwnership(driveId, userId)
@@ -34,86 +58,88 @@ export class FolderService {
         return folder;
     }
 
-    async checkParentFolder(parentFolderId: string, driveId: string) {
-        const parentFolder = await this.prisma.folder.findFirst({
-            where: {
-                id: parentFolderId,
-                driveId,
-                isDeleted: false
-            }
-        });
-        if (!parentFolder) throw new NotFoundException("Parent folder is not found!");
-        return parentFolder;
-    }
-
     async createFolder(
         userId: string,
         driveId: string,
         parentFolderId: string | undefined,
         folderName: string
     ) {
-        await this.checkDrive(driveId, userId);
-
+        let actualDriveId = driveId;
         if (parentFolderId) {
-            await this.checkParentFolder(
-                parentFolderId,
-                driveId,
-            );
+            const parent = await this.prisma.folder.findUnique({
+                where: { id: parentFolderId },
+            });
+            if (!parent) throw new NotFoundException("Parent is not found!");
+
+            actualDriveId = parent.driveId;
+            await this.checkFolderAccess(parentFolderId, userId, PermissionType.EDIT,);
+        } else {
+            await this.checkDrive(driveId, userId);
         }
 
-        return this.prisma.$transaction(async (tx) => {
+        await this.prisma.$transaction(async (tx) => {
             const folder = await tx.folder.create({
                 data: {
                     folderName,
                     parentFolderId,
-                    driveId
+                    driveId: actualDriveId
                 },
             });
-            await tx.aCL.create({
-                data: {
-                    userId,
-                    folderId: folder.id,
-                    permissionType: "SHARE",
-                    isOwner: true,
-                }
+            await this.aclService.createACL(tx, {
+                userId,
+                folderId: folder.id,
+                permissionType: PermissionType.SHARE,
+                isOwner: true,
             });
+            await this.activityService.createActivity(
+                tx,
+                userId,
+                folder.id,
+                { action: ActivityAction.CREATE, metadata: { folderName } }
+            );
             return folder;
-        })
+        });
+        return {
+            message: "Created folder successfully"!
+        };
     }
 
     async renameFolder(userId: string, folderId: string, newFolderName: string): Promise<FolderResponseDTO> {
         await this.checkFolderAccess(folderId, userId, PermissionType.EDIT);
-        const folder = await this.prisma.folder.update({
-            where: {
-                id: folderId
-            },
-            data: {
-                folderName: newFolderName
-            },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
+
+        const folder = await this.prisma.$transaction(async (tx) => {
+            const oldFolder = await this.prisma.folder.findUnique({
+                where: { id: folderId, status: FolderStatus.SHOW, isDeleted: false }
+            });
+            if (!oldFolder) throw new NotFoundException("Folder is not found!");
+
+            const folder = await tx.folder.update({
+                where: { id: folderId },
+                data: { folderName: newFolderName },
+            });
+            await this.activityService.createActivity(
+                tx,
+                userId,
+                folderId,
+                {
+                    action: ActivityAction.RENAME,
+                    metadata: {
+                        oldName: oldFolder.folderName,
+                        newName: newFolderName,
                     },
                 },
-            },
+            );
+            return folder;
         });
-        return {
-            id: folder.id,
-            folderName: folder.folderName,
-            parentFolderId: folder.parentFolderId,
-            driveId: folder.driveId,
-            status: folder.status,
-            createdAt: folder.createdAt,
-            updatedAt: folder.updatedAt,
-            owner: {
-                id: folder.drive.user.id,
-                fullName: folder.drive.user.fullName
-            },
-            permissionType: null
-        };
+        const result = await this.prisma.folder.findUnique({
+            where: { id: folder.id },
+            include: folderWithOwnerInclude,
+        });
+        if (!result) {
+            throw new NotFoundException("Folder is not found!");
+        }
+
+        return this.mappingFolderResponse(result);
     }
 
     async getDriveFolders(userId: string, driveId: string, showHidden: boolean = false) {
@@ -127,15 +153,7 @@ export class FolderService {
                     status: FolderStatus.SHOW,
                 }),
             },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
-                    },
-                },
-            },
+            include: folderWithOwnerInclude,
             orderBy: {
                 createdAt: "asc"
             }
@@ -168,15 +186,7 @@ export class FolderService {
                     status: FolderStatus.SHOW,
                 }),
             },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
-                    },
-                },
-            },
+            include: folderWithOwnerInclude,
             orderBy: {
                 createdAt: "asc"
             }
@@ -197,15 +207,6 @@ export class FolderService {
             })),
             showHidden
         }
-    }
-
-    private hasPermission(current: PermissionType, required: PermissionType): boolean {
-        const permissions = {
-            VIEW: 1,
-            EDIT: 2,
-            SHARE: 3,
-        };
-        return permissions[current] >= permissions[required];
     }
 
     async checkFolderAccess(
@@ -270,30 +271,9 @@ export class FolderService {
                 status: FolderStatus.HIDDEN,
                 passwordHash,
             },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
-                    },
-                },
-            },
+            include: folderWithOwnerInclude,
         });
-        return {
-            id: folder.id,
-            folderName: folder.folderName,
-            parentFolderId: folder.parentFolderId,
-            driveId: folder.driveId,
-            status: folder.status,
-            createdAt: folder.createdAt,
-            updatedAt: folder.updatedAt,
-            owner: {
-                id: folder.drive.user.id,
-                fullName: folder.drive.user.fullName
-            },
-            permissionType: null
-        };
+        return this.mappingFolderResponse(folder);
     }
 
     async showFolder(userId: string, folderId: string, password: string): Promise<FolderResponseDTO> {
@@ -311,30 +291,9 @@ export class FolderService {
                 status: FolderStatus.SHOW,
                 passwordHash: null
             },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
-                    },
-                },
-            },
+            include: folderWithOwnerInclude,
         });
-        return {
-            id: folderShow.id,
-            folderName: folderShow.folderName,
-            parentFolderId: folderShow.parentFolderId,
-            driveId: folderShow.driveId,
-            status: folderShow.status,
-            createdAt: folderShow.createdAt,
-            updatedAt: folderShow.updatedAt,
-            owner: {
-                id: folderShow.drive.user.id,
-                fullName: folderShow.drive.user.fullName,
-            },
-            permissionType: null
-        };
+        return this.mappingFolderResponse(folderShow);
     }
 
     async hasDeletedAncestor(folderId: string): Promise<boolean> {
@@ -374,31 +333,10 @@ export class FolderService {
             data: {
                 isDeleted: true,
             },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
-                    },
-                },
-            },
+            include: folderWithOwnerInclude,
         });
 
-        return {
-            id: folder.id,
-            folderName: folder.folderName,
-            parentFolderId: folder.parentFolderId,
-            driveId: folder.driveId,
-            status: folder.status,
-            createdAt: folder.createdAt,
-            updatedAt: folder.updatedAt,
-            owner: {
-                id: folder.drive.user.id,
-                fullName: folder.drive.user.fullName
-            },
-            permissionType: null
-        };
+        return this.mappingFolderResponse(folder);
     }
 
     async getTrash(userId: string): Promise<FolderResponseDTO[]> {
@@ -413,31 +351,10 @@ export class FolderService {
             orderBy: {
                 updatedAt: "desc",
             },
-            include: {
-                drive: {
-                    include: {
-                        user: {
-                            select: { id: true, fullName: true },
-                        },
-                    },
-                },
-            },
+            include: folderWithOwnerInclude,
         });
 
-        return folders.map((folder) => ({
-            id: folder.id,
-            folderName: folder.folderName,
-            parentFolderId: folder.parentFolderId,
-            driveId: folder.driveId,
-            status: folder.status,
-            createdAt: folder.createdAt,
-            updatedAt: folder.updatedAt,
-            owner: {
-                id: folder.drive.user.id,
-                fullName: folder.drive.user.fullName
-            },
-            permissionType: null
-        }));
+        return folders.map((folder) => this.mappingFolderResponse(folder));
     }
 
     async getFolderPath(

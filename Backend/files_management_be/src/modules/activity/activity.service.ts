@@ -9,11 +9,12 @@ export class ActivityService {
     constructor(private readonly prisma: PrismaService) { }
 
     async createActivity(
+        tx: Prisma.TransactionClient | PrismaService,
         userId: string,
         folderId: string,
         data: ActivityMetadata
     ) {
-        return this.prisma.activity.create({
+        return tx.activity.create({
             data: {
                 userId,
                 folderId,
