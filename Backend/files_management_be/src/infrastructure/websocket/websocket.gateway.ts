@@ -25,6 +25,9 @@ export class AppWebSocketGateway implements OnGatewayConnection, OnGatewayDiscon
             const token = cookies.access_token;
             const { sub } = await this.authService.verifyAccessToken(token!);
 
+            console.log("🔥 SOCKET USER:", sub);
+            console.log("🔥 JOIN ROOM:", `user:${sub}`);
+
             socket.join(`user:${sub}`);
             console.log(`Client connected: ${socket.id}`);
         } catch {
@@ -37,6 +40,7 @@ export class AppWebSocketGateway implements OnGatewayConnection, OnGatewayDiscon
     }
 
     sendNotification(receiverId: string, notification: Notification) {
+        console.log("🔥 SEND REALTIME TO:", receiverId);
         this.server.to(`user:${receiverId}`).emit("notification", notification);
     }
 }
