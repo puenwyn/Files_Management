@@ -149,4 +149,16 @@ export class FolderController {
             req.user.id,
         );
     }
+
+    @Get(":folderId/detail")
+    @UseGuards(JwtAuthGuard)
+    async getFolderDetail(
+        @Param("folderId") folderId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.folderService.getFolderDetail(
+            req.user.id,
+            folderId,
+        );
+    }
 }

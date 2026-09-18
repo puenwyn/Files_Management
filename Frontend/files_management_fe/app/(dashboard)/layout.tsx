@@ -1,4 +1,5 @@
 import Header from "@/components/dashboard/layout/Header/header";
+import { Resource } from "@/components/dashboard/layout/ResourceDetail/resource";
 import Sidebar from "@/components/dashboard/layout/Sidebar/sidebar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {children}
                 </div>
             </section>
+            <Resource />
         </main>
     )
 }

@@ -9,6 +9,7 @@ import { ActivityService } from "../activity/activity.service";
 import { folderWithOwnerInclude } from "./constants/folder.include";
 import { FolderWithOwner } from "./types/folder-with-owner.type";
 import { NotificationService } from "../notification/notification.service";
+import { FolderDetailResponseDTO } from "./dtos/folder-detail-response.dto";
 
 @Injectable()
 export class FolderService {
@@ -477,6 +478,65 @@ export class FolderService {
                 id: folder.id,
                 folderName: folder.folderName,
             })),
+        };
+    }
+
+    async getFolderDetail(
+        userId: string,
+        folderId: string
+    ): Promise<FolderDetailResponseDTO> {
+        await this.checkFolderAccess(
+            folderId,
+            userId,
+            PermissionType.VIEW
+        );
+        const folder = await this.prisma.folder.findFirst({
+            where: { id: folderId, isDeleted: false, },
+            include: {
+                acls: {
+                    orderBy: { createdAt: "asc", },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!folder) {
+            throw new NotFoundException("Folder not found");
+        }
+
+        const owner = folder.acls.find((acl) => acl.isOwner);
+
+        if (!owner) {
+            throw new NotFoundException("Folder owner not found");
+        }
+
+        return {
+            id: folder.id,
+            folderName: folder.folderName,
+            driveId: folder.driveId,
+            createdAt: folder.createdAt,
+            updatedAt: folder.updatedAt,
+            owner: {
+                id: owner.user.id,
+                fullName: owner.user.fullName,
+                permissionType: owner.permissionType,
+                isOwner: true,
+            },
+            users: folder.acls
+                .filter((acl) => !acl.isOwner)
+                .map((acl) => ({
+                    id: acl.user.id,
+                    fullName: acl.user.fullName,
+                    permissionType: acl.permissionType,
+                    isOwner: false,
+                })),
         };
     }
 }
