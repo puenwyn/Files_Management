@@ -5,7 +5,7 @@ interface AppDropdownItemProps {
     icon: React.ReactNode;
     action: string;
     destructive?: boolean
-    subMenu?: string;
+    disabled?: boolean
     onClick?: () => void;
 }
 
@@ -13,11 +13,12 @@ export default function AppDropdownMenuItem({
     icon,
     action,
     destructive,
-    subMenu,
+    disabled,
     onClick
 }: AppDropdownItemProps) {
     return (
         <DropdownMenuItem
+            disabled={disabled}
             onClick={onClick}
             className="px-3 py-1.5 cursor-pointer" variant={destructive ? "destructive" : "default"}
         >

@@ -2,16 +2,21 @@ import { ActionType } from "@/constants/action-type";
 import { MenuItem, toolMenuItems } from "@/constants/dashboard/menu";
 import { useState } from "react";
 import { useDeleteFolder } from "../folder/useDeleteFolder.hook";
+import { PermissionType } from "@/constants/permission-type";
 
 export function useFolderMenu(
     folderId: string,
     driveId: string,
-    parentFolderId: string | null
+    parentFolderId: string | null,
+    permission: PermissionType
 ) {
 
     const [renameOpen, setRenameOpen] = useState(false);
     const [hideOpen, setHideOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
+
+    const canEdit = permission === PermissionType.EDIT || permission === PermissionType.SHARE;
+    const canShare = permission === PermissionType.SHARE;
 
     const {
         deleteFolderMutation,
@@ -20,6 +25,7 @@ export function useFolderMenu(
         error: errorLoading,
         isSuccess: isDeleteSuccess
     } = useDeleteFolder(folderId, driveId, parentFolderId);
+
 
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
@@ -43,6 +49,7 @@ export function useFolderMenu(
                 case ActionType.RENAME:
                     return {
                         ...newItem,
+                        disabled: !canEdit,
                         onClick: () => setRenameOpen(true),
                     };
 
@@ -63,6 +70,7 @@ export function useFolderMenu(
                 case ActionType.MANAGE_ACCESS:
                     return {
                         ...newItem,
+                        disabled: !canShare,
                         onClick: () => setShareOpen(!shareOpen),
                     };
 

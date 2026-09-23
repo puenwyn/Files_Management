@@ -385,25 +385,20 @@ export class FolderService {
 
     async hasDeletedAncestor(folderId: string): Promise<boolean> {
         const result = await this.prisma.$queryRaw<{ exists: boolean }[]>`
-        WITH RECURSIVE ancestors AS (
-            SELECT "parentFolderId", "isDeleted"
-            FROM "Folder"
-            WHERE "id" = ${folderId}
-
-            UNION ALL
-
-            SELECT f."parentFolderId", f."isDeleted"
-            FROM "Folder" f
-            INNER JOIN ancestors a
-                ON f."id" = a."parentFolderId"
-        )
-        SELECT EXISTS (
-            SELECT 1
-            FROM ancestors
-            WHERE "isDeleted" = true
-        ) AS "exists"
-    `;
-
+            WITH RECURSIVE ancestors AS (
+                SELECT parent."parentFolderId", parent."isDeleted"
+                FROM "Folder" current
+                INNER JOIN "Folder" parent ON parent."id" = current."parentFolderId"
+                WHERE current."id" = ${folderId}
+                UNION ALL
+                SELECT parent."parentFolderId", parent."isDeleted"
+                FROM "Folder" parent
+                INNER JOIN ancestors a ON parent."id" = a."parentFolderId"
+            )
+            SELECT EXISTS (
+                SELECT 1 FROM ancestors WHERE "isDeleted" = true
+            ) AS "exists"
+        `;
         return result[0].exists;
     }
 
@@ -453,6 +448,7 @@ export class FolderService {
             userId,
             PermissionType.VIEW
         );
+
         const result = await this.prisma.$queryRaw<
             {
                 id: string;
@@ -465,24 +461,52 @@ export class FolderService {
             SELECT "id", "folderName", "parentFolderId", "driveId"
             FROM "Folder"
             WHERE "id" = ${folderId}
+
             UNION ALL
+
             SELECT f."id", f."folderName", f."parentFolderId", f."driveId"
             FROM "Folder" f
-            INNER JOIN ancestors a ON f."id" = a."parentFolderId"
-        ) SELECT "id", "folderName", "parentFolderId", "driveId" FROM ancestors;`;
+            INNER JOIN ancestors a
+                ON f."id" = a."parentFolderId"
+        )
+        SELECT "id", "folderName", "parentFolderId", "driveId"
+        FROM ancestors;
+    `;
 
         const folders = result.reverse();
+
         const ownerACL = await this.prisma.aCL.findUnique({
             where: {
-                userId_folderId: { userId, folderId, },
+                userId_folderId: { userId, folderId },
             },
-            select: { isOwner: true, },
+            select: {
+                isOwner: true,
+            },
         });
+
+        if (ownerACL?.isOwner) {
+            return {
+                driveId: folders[0].driveId,
+                isShared: false,
+                folders: folders.map((folder) => ({
+                    id: folder.id,
+                    folderName: folder.folderName,
+                })),
+            };
+        }
+
+        const sharedFolders = await this.aclService.getSharedFolders(userId);
+
+        const sharedRootIndex = folders.findIndex((folder) =>
+            sharedFolders.some((shared) => shared.id === folder.id)
+        );
+
+        const visibleFolders = folders.slice(sharedRootIndex);
 
         return {
             driveId: folders[0].driveId,
-            isShared: !ownerACL?.isOwner,
-            folders: folders.map((folder) => ({
+            isShared: true,
+            folders: visibleFolders.map((folder) => ({
                 id: folder.id,
                 folderName: folder.folderName,
             })),
@@ -546,5 +570,34 @@ export class FolderService {
                     isOwner: false,
                 })),
         };
+    }
+
+    async restoreFolder(userId: string, folderId: string): Promise<FolderResponseDTO> {
+        const folder = await this.prisma.folder.findFirst({
+            where: {
+                id: folderId,
+                isDeleted: true,
+                drive: { userId, isDeleted: false },
+            },
+        });
+        if (!folder) throw new NotFoundException("Folder is not found!");
+        const hasDeletedAncestor = await this.hasDeletedAncestor(folderId);
+        if (hasDeletedAncestor) {
+            throw new BadRequestException(
+                "Cannot restore folder because its parent folder is deleted!"
+            );
+        }
+
+        const restoredFolder = await this.prisma.folder.update({
+            where: {
+                id: folderId,
+            },
+            data: {
+                isDeleted: false,
+            },
+            include: folderWithOwnerInclude,
+        });
+
+        return this.mappingFolderResponse(restoredFolder);
     }
 }

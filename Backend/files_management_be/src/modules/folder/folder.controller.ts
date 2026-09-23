@@ -144,10 +144,7 @@ export class FolderController {
         @Req() req: AuthenticatedRequest,
         @Param("folderId") folderId: string,
     ) {
-        return this.folderService.getFolderPath(
-            folderId,
-            req.user.id,
-        );
+        return this.folderService.getFolderPath(folderId, req.user.id);
     }
 
     @Get(":folderId/detail")
@@ -156,9 +153,15 @@ export class FolderController {
         @Param("folderId") folderId: string,
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.folderService.getFolderDetail(
-            req.user.id,
-            folderId,
-        );
+        return this.folderService.getFolderDetail(req.user.id, folderId);
+    }
+
+    @Patch(":folderId/restore")
+    @UseGuards(JwtAuthGuard)
+    async restoreFolder(
+        @Param("folderId") folderId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.folderService.restoreFolder(req.user.id, folderId);
     }
 }

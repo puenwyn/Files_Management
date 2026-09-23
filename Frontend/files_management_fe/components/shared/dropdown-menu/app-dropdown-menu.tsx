@@ -54,6 +54,7 @@ export default function AppDropdownMenu({
                                                             }
                                                             action={subItem.label}
                                                             destructive={subItem.destructive}
+                                                            disabled={subItem.disabled}
                                                             onClick={subItem.onClick}
                                                         />
                                                     </React.Fragment>
@@ -71,6 +72,7 @@ export default function AppDropdownMenu({
                                     }
                                     action={item.label}
                                     destructive={item.destructive}
+                                    disabled={item.disabled}
                                     onClick={item.onClick}
                                 />
                             )}
