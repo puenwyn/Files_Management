@@ -1,31 +1,54 @@
+"use client"
 import { ResourceType } from "@/types/resource.type"
-import ResourceDetailItem from "./resource-detail-item"
+import ResourceDetailInfoItem from "./resource-detail-info-item"
+import ResourceSection from "../resource-section"
+import ResourceDetailAccess from "./resource-detail-access"
+import { useGetFolderDetail } from "@/hooks/folder/useGetFolderDetail.hook";
 
 interface ResourceDetailProps {
-    resource: ResourceType
+    resource: ResourceType;
+    resourceId: string;
 }
 
 export default function ResourceDetail({
-    resource
+    resource,
+    resourceId
 }: ResourceDetailProps) {
+
+    const { data, isLoading } = useGetFolderDetail(resourceId);
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!data) {
+        return null;
+    }
+
     return (
         <div className="">
-            <h3>{`${resource === ResourceType.FOLDER ? "Folder" : "File"} detail`}</h3>
-            <ResourceDetailItem
-                title="Type"
-                content="Video"
-            />
-            <ResourceDetailItem
-                title="Owner"
-                content="Nguyen Huy"
-            />
-            <ResourceDetailItem
-                title="Modified"
-                content="16 Dec 2026 by me"
-            />
-            <ResourceDetailItem
-                title="Created"
-                content="16 Dec 2026 by me"
+            <ResourceSection title={`${resource === ResourceType.FOLDER ? "Folder" : "File"} detail`}>
+                <ResourceDetailInfoItem
+                    title="Type"
+                    content="Video"
+                />
+                <ResourceDetailInfoItem
+                    title="Owner"
+                    content={data.owner.fullName}
+                />
+                <ResourceDetailInfoItem
+                    title="Modified"
+                    content={data.updatedAt}
+                />
+                <ResourceDetailInfoItem
+                    title="Created"
+                    content={data.createdAt}
+                />
+            </ResourceSection>
+
+            <ResourceDetailAccess
+                owner={data.owner}
+                users={data.users}
             />
         </div>
     )

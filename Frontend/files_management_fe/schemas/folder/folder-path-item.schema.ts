@@ -7,6 +7,7 @@ export const folderPathItemSchema = z.object({
 
 export const folderPathResponseSchema = z.object({
     driveId: z.string(),
+    isShared: z.boolean(),
     folders: z.array(folderPathItemSchema),
 });
 

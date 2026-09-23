@@ -1,12 +1,12 @@
-interface ResourceDetailItemProps {
+interface ResourceDetailInfoItemProps {
     title: string;
     content: string;
 }
 
-export default function ResourceDetailItem({
+export default function ResourceDetailInfoItem({
     title,
     content
-}: ResourceDetailItemProps) {
+}: ResourceDetailInfoItemProps) {
     return (
         <div className="flex flex-col gap-1">
             <p className="text-xs">{title}</p>

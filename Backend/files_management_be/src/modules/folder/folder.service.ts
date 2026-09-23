@@ -472,8 +472,16 @@ export class FolderService {
         ) SELECT "id", "folderName", "parentFolderId", "driveId" FROM ancestors;`;
 
         const folders = result.reverse();
+        const ownerACL = await this.prisma.aCL.findUnique({
+            where: {
+                userId_folderId: { userId, folderId, },
+            },
+            select: { isOwner: true, },
+        });
+
         return {
             driveId: folders[0].driveId,
+            isShared: !ownerACL?.isOwner,
             folders: folders.map((folder) => ({
                 id: folder.id,
                 folderName: folder.folderName,

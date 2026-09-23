@@ -1,6 +1,7 @@
 import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
+import { FolderDetailResponse, folderDetailResponseSchema } from "@/schemas/folder/folder-detail-response.schema";
 import { FolderPathResponse, folderPathResponseSchema } from "@/schemas/folder/folder-path-item.schema";
 import { FolderListResponse, folderListResponseSchema, FolderResponse, folderResponseSchema, FolderTrashListResponse, folderTrashListResponseSchema } from "@/schemas/folder/folder-response.schema";
 import { HideFolderRequest } from "@/schemas/folder/hide-folder.schema";
@@ -151,6 +152,38 @@ export const folderService = {
 
             const result = createApiResponseSchema(
                 folderPathResponseSchema
+            ).parse(response.data);
+
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+
+                if (responseData.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("Folder not found");
+                }
+
+                if (responseData.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error(
+                        "You don't have permission to access this folder"
+                    );
+                }
+            }
+
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    getFolderDetail: async (
+        folderId: string
+    ): Promise<FolderDetailResponse> => {
+        try {
+            const response = await axiosClient.get(
+                `/folder/${folderId}/detail`
+            );
+
+            const result = createApiResponseSchema(
+                folderDetailResponseSchema
             ).parse(response.data);
 
             return result.data!;

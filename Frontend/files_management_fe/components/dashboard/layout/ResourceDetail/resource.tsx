@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ResourceDetail from "./ResourceDetail/resource-detail";
 import ResourceActivity from "./resource-activity";
+import { ResourceType } from "@/types/resource.type";
 
 interface ResouceProps {
     open?: boolean;
@@ -21,7 +22,7 @@ export function Resource({
                         <TabsTrigger value="activity">Activity</TabsTrigger>
                     </TabsList>
                     <TabsContent value="detail">
-                        <ResourceDetail />
+                        <ResourceDetail resource={ResourceType.FOLDER} resourceId="" />
                     </TabsContent>
                     <TabsContent value="activity">
                         <ResourceActivity />

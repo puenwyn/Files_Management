@@ -33,23 +33,21 @@ export default function FilesPage() {
 
     const breadcrumbItems = [
         {
-            label: "Drive",
-            href: "/drives",
+            label: folderPath?.isShared ? "Share" : "Drive",
+            href: folderPath?.isShared ? "/shared" : "/drives",
         },
-        ...(drive
+        ...(!folderPath?.isShared && drive
             ? [
                 {
                     label: drive.driveName,
                     href: `/drives/${drive.id}`,
                 },
-            ]
-            : []),
+            ] : []),
+
         ...folders.map((folder, index) => ({
             label: folder.folderName,
             href:
-                index === folders.length - 1
-                    ? undefined
-                    : `/files/${folder.id}`,
+                index === folders.length - 1 ? undefined : `/files/${folder.id}`,
         })),
     ];
 
