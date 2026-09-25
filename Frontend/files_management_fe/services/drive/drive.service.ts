@@ -4,6 +4,7 @@ import { DriveListResponse, driveListResponseSchema, driveResponseSchema } from 
 import { DriveResponse } from "../../schemas/drive/drive-response.schema";
 import axios from "axios";
 import { ErrorCode } from "@/constants/error-code";
+import { StorageResponse, storageResponseSchema } from "@/schemas/drive/storage-response.schema";
 
 export const driveService = {
     getDrives: async (): Promise<DriveListResponse> => {
@@ -34,5 +35,17 @@ export const driveService = {
             }
             throw new Error("Can't connect to server");
         }
-    }
+    },
+
+    getTotalStorage: async (): Promise<StorageResponse> => {
+        try {
+            const response = await axiosClient.get(
+                "/drive/storage"
+            );
+            const result = createApiResponseSchema(storageResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            throw new Error("Can't connect to server");
+        }
+    },
 }
