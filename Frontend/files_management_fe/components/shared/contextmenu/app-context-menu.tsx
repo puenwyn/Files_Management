@@ -16,17 +16,15 @@ import AppContextMenuItem from "./context-menu-item";
 interface AppContextMenuProps {
     children: React.ReactNode;
     items: MenuItem[];
-    actions?: Record<string, () => void>
 }
 
 export default function AppContextMenu({
     children,
-    items,
-    actions
+    items
 }: AppContextMenuProps) {
     return (
         <ContextMenu>
-            <ContextMenuTrigger>
+            <ContextMenuTrigger className="w-full flex-1">
                 {children}
             </ContextMenuTrigger>
 
@@ -42,7 +40,7 @@ export default function AppContextMenu({
                                 <ContextMenuSub>
                                     <ContextMenuSubTrigger className="px-3 py-1.5 cursor-pointer">
                                         {Icon && <Icon className="size-4" />}
-                                        {item.action}
+                                        {item.label}
                                     </ContextMenuSubTrigger>
 
                                     <ContextMenuSubContent className="w-64">
@@ -51,12 +49,8 @@ export default function AppContextMenu({
                                                 const SubIcon = subItem.icon;
 
                                                 return (
-                                                    <React.Fragment
-                                                        key={`${subItem.action}-${subIndex}`}
-                                                    >
-                                                        {subItem.separator && (
-                                                            <ContextMenuSeparator />
-                                                        )}
+                                                    <React.Fragment key={`${subItem.action}-${subIndex}`}>
+                                                        {subItem.separator && (<ContextMenuSeparator />)}
 
                                                         <AppContextMenuItem
                                                             icon={
@@ -66,7 +60,7 @@ export default function AppContextMenu({
                                                             }
                                                             action={subItem.action}
                                                             destructive={subItem.destructive}
-                                                            onClick={actions?.[subItem.action]}
+                                                            onClick={subItem.onClick}
                                                         />
                                                     </React.Fragment>
                                                 );

@@ -62,22 +62,22 @@ export const toolMenuItems: MenuItem[] = [
 
 export const bgroundMenuItems: MenuItem[] = [
     {
-        icon: ArrowDownToLine,
-        label: "Download",
-        action: "New Folder",
-    },
-    {
         icon: FolderUp,
-        label: "Download",
-        action: "Upload File",
-        separator: true
+        label: "New Folder",
+        action: ActionType.NEW_FOLDER,
     },
     {
         icon: FileUp,
-        label: "Download",
-        action: "Upload Folder",
+        label: "Upload File",
+        action: ActionType.UPLOAD_FILE,
+        separator: true,
     },
-]
+    {
+        icon: FolderUp,
+        label: "Upload Folder",
+        action: ActionType.UPLOAD_FOLDER,
+    },
+];
 
 export const trashMenuItems: MenuItem[] = [
     {

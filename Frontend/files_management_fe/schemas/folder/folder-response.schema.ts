@@ -10,7 +10,7 @@ export const folderResponseSchema = z.object({
     id: z.string(),
     folderName: z.string(),
     parentFolderId: z.string().nullable(),
-    driveId: z.string(),
+    driveId: z.string().nullable(),
     status: z.enum(["SHOW", "HIDDEN"]),
     createdAt: z.coerce.date(),
     updatedAt: z.coerce.date(),

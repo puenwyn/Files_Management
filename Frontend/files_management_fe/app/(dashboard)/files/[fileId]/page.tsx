@@ -2,7 +2,9 @@
 import FolderItem from "@/components/dashboard/home/list/gridview/folder-item";
 import { AppBreadcrumb } from "@/components/shared/breadcrumb/app-breadcrumb";
 import AppContextMenu from "@/components/shared/contextmenu/app-context-menu";
-import { toolMenuItems } from "@/constants/dashboard/menu";
+import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
+import { bgroundMenuItems } from "@/constants/dashboard/menu";
+import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
 import { useFindDrive } from "@/hooks/drive/useFindDrive.hook";
 import { useGetFolderChildren } from "@/hooks/folder/useGetFolderChildren.hook";
 import { useGetFolderPath } from "@/hooks/folder/useGetFolderPath.hook";
@@ -25,9 +27,17 @@ export default function FilesPage() {
         isPending: isPathPending,
     } = useGetFolderPath(folderId);
 
+    const {
+        items,
+        createFolderOpen,
+        setCreateFolderOpen,
+    } = useContextMenu();
+
     const { data: drive } = useFindDrive(
         folderPath?.driveId ?? ""
     );
+
+    console.log("=============", data)
 
     const folders = folderPath?.folders ?? [];
 
@@ -52,9 +62,9 @@ export default function FilesPage() {
     ];
 
     return (
-        <main className="space-y-5">
+        <main className="min-h-full flex flex-col space-y-5">
             <AppBreadcrumb items={breadcrumbItems} />
-            <AppContextMenu items={toolMenuItems}>
+            <AppContextMenu items={items}>
                 <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                     {data.map((item) => (
                         <FolderItem
@@ -64,14 +74,18 @@ export default function FilesPage() {
                             driveId={item.driveId}
                             parentFolderId={item.parentFolderId}
                             isHidden={item.status === "SHOW" ? false : true}
+                            permissionType={item.permissionType ?? undefined}
                         />
                     ))}
-                    {/* <FolderItem
-                name="Tài liệu học tập"
-                items={13}
-            /> */}
                 </div>
             </AppContextMenu>
+
+            <CreateFolderDialog
+                open={createFolderOpen}
+                onOpenChange={setCreateFolderOpen}
+                driveId={null}
+                parentFolderId={folderId}
+            />
         </main>
     );
 }

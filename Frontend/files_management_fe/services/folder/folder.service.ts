@@ -1,6 +1,8 @@
 import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
+import { CommonResponse, commonResponseSchema } from "@/schemas/common/common-response.schema";
+import { CreateFolderRequest } from "@/schemas/folder/create-folder.schema";
 import { FolderDetailResponse, folderDetailResponseSchema } from "@/schemas/folder/folder-detail-response.schema";
 import { FolderPathResponse, folderPathResponseSchema } from "@/schemas/folder/folder-path-item.schema";
 import { FolderListResponse, folderListResponseSchema, FolderResponse, folderResponseSchema, FolderTrashListResponse, folderTrashListResponseSchema } from "@/schemas/folder/folder-response.schema";
@@ -45,7 +47,26 @@ export const folderService = {
                     throw new Error("You don't have permission to access this folder");
                 }
             }
-            throw new Error("Can't connect to server")
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    createFolder: async (data: CreateFolderRequest): Promise<CommonResponse> => {
+        try {
+            const response = await axiosClient.post(
+                "/folder",
+                data
+            );
+            const result = createApiResponseSchema(commonResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("Not found");
+                }
+            }
+            throw new Error("Can't connect to server");
         }
     },
 
@@ -206,8 +227,8 @@ export const folderService = {
             const result = createApiResponseSchema(folderResponseSchema).parse(response.data);
             return result.data!;
         } catch (error: unknown) {
-            
-            console.log("This is error" ,error);
+
+            console.log("This is error", error);
             if (axios.isAxiosError(error)) {
                 const responseData = error.response?.data;
                 if (responseData.error?.code === ErrorCode.NOT_FOUND) {

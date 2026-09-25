@@ -27,6 +27,7 @@ export default function ProfileInfoCard() {
         onSubmit,
         isLoading,
         isError,
+        isDirty
     } = useUpdateProfile();
 
     const {
@@ -93,7 +94,7 @@ export default function ProfileInfoCard() {
                 </div>
 
                 <div className="flex gap-3 mt-6">
-                    <Button type="submit">
+                    <Button type="submit" disabled={!isDirty}>
                         Save Changes
                     </Button>
 

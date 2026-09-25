@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { userService } from "@/services/user/user.service";
+import { toast } from "@/components/ui/toast";
 
 export function useUpdateProfile() {
     const {
@@ -24,7 +25,7 @@ export function useUpdateProfile() {
         },
     });
 
-    const { reset, handleSubmit } = form;
+    const { reset, handleSubmit, formState: { isDirty } } = form;
 
     useEffect(() => {
         if (!profile) return;
@@ -41,11 +42,17 @@ export function useUpdateProfile() {
 
     const updateProfileMutation = useMutation({
         mutationFn: userService.updateProfile,
-        onSuccess: (data) => {
-            console.log("Update success:", data);
+        onSuccess: () => {
+            toast.add({
+                type: "success",
+                description: "User information updated successfully!"
+            });
         },
         onError: (error) => {
-            console.log("Error:", error.message);
+            toast.add({
+                type: "error",
+                description: error.message
+            });
         },
     })
 
@@ -57,6 +64,7 @@ export function useUpdateProfile() {
         form,
         onSubmit,
         isLoading: isLoading,
-        isError: isError
+        isError: isError,
+        isDirty: isDirty
     }
 }

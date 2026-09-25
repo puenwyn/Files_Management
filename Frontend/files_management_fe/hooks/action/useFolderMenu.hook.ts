@@ -26,12 +26,6 @@ export function useFolderMenu(
         isSuccess: isDeleteSuccess
     } = useDeleteFolder(folderId, driveId, parentFolderId);
 
-    console.log("permission:", permissionType);
-    console.log("PermissionType.SHARE:", PermissionType.SHARE);
-    console.log("canShare:", canShare);
-    console.log("equal:", permissionType === PermissionType.SHARE);
-
-
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
             const newItem = {

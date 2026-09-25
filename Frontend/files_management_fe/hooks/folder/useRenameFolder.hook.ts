@@ -44,7 +44,6 @@ export function useRenameFolder(
             });
         },
         onError: (error) => {
-            console.log("Rename folder error:", error.message);
             toast.add({
                 type: "error",
                 description: error.message,

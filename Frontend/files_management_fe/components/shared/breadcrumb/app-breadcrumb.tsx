@@ -25,7 +25,7 @@ export function AppBreadcrumb({
 }: AppBreadcrumbProps) {
     return (
         <Breadcrumb>
-            <BreadcrumbList>
+            <BreadcrumbList className="select-none">
                 {items.map((item, index) => {
                     const isLast = index === items.length - 1;
 

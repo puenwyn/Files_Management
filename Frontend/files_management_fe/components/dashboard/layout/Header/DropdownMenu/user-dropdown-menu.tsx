@@ -15,12 +15,16 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useLogout } from "@/hooks/auth/useLogout";
 import LoadingOverlay from "@/components/common/loading-overlay";
+import { useProfile } from "@/hooks/auth/useProfile.hook";
 
 export default function UserDropdownMenu() {
 
     const router = useRouter();
 
+    const { profile, isLoading, isError } = useProfile();
+
     const { logout, isPending } = useLogout();
+
 
     return (
         <>
@@ -45,7 +49,7 @@ export default function UserDropdownMenu() {
                     </Avatar>
 
                     <span className="w-20 truncate text-xs font-medium text-foreground">
-                        Nguyễn Huy An
+                        {profile?.fullName}
                     </span>
 
                     <ChevronDown className="size-4" />

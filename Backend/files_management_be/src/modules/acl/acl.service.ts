@@ -57,9 +57,6 @@ export class ACLService {
                 folderId,
                 folder: {
                     isDeleted: false,
-                    drive: {
-                        isDeleted: false,
-                    },
                 },
             },
             include: {
@@ -264,38 +261,24 @@ export class ACLService {
         folderId: string,
         userId: string,
     ) {
-        // Kiểm tra user có được share folder cha hay không
         const acl = await this.prisma.aCL.findUnique({
             where: {
-                userId_folderId: {
-                    userId,
-                    folderId,
-                },
+                userId_folderId: { userId, folderId },
             },
-            select: {
-                permissionType: true,
-            },
+            select: { permissionType: true },
         });
 
-        if (!acl) {
-            throw new ForbiddenException(
-                "You don't have permission to access this folder!",
-            );
-        }
+        if (!acl) throw new ForbiddenException(
+            "You don't have permission to access this folder!",
+        );
 
-        // Chỉ lấy những folder con trực tiếp
-        // và folder con đó cũng phải được share cho user
         const folders = await this.prisma.folder.findMany({
             where: {
                 parentFolderId: folderId,
                 isDeleted: false,
                 status: "SHOW",
-
                 acls: {
-                    some: {
-                        userId,
-                        isOwner: false,
-                    },
+                    some: { userId, isOwner: false, },
                 },
             },
             select: {
@@ -306,8 +289,8 @@ export class ACLService {
                 status: true,
                 createdAt: true,
                 updatedAt: true,
-
-                drive: {
+                acls: {
+                    where: { isOwner: true, },
                     select: {
                         user: {
                             select: {
@@ -323,19 +306,22 @@ export class ACLService {
             },
         });
 
-        return folders.map((folder) => ({
-            id: folder.id,
-            folderName: folder.folderName,
-            parentFolderId: folder.parentFolderId,
-            driveId: folder.driveId,
-            status: folder.status,
-            createdAt: folder.createdAt,
-            updatedAt: folder.updatedAt,
-            owner: {
-                id: folder.drive.user.id,
-                fullName: folder.drive.user.fullName,
-            },
-        }));
+        return folders.map((folder) => {
+            const owner = folder.acls[0];
+            return {
+                id: folder.id,
+                folderName: folder.folderName,
+                parentFolderId: folder.parentFolderId,
+                driveId: folder.driveId,
+                status: folder.status,
+                createdAt: folder.createdAt,
+                updatedAt: folder.updatedAt,
+                owner: {
+                    id: owner.user.id,
+                    fullName: owner.user.fullName,
+                },
+            };
+        });
     }
 
     async getFolderUsers(

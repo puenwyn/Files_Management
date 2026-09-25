@@ -13,6 +13,9 @@ import { bgroundMenuItems } from "@/constants/dashboard/menu";
 import { useFindDrive } from "@/hooks/drive/useFindDrive.hook";
 import { useGetDriveFolders } from "@/hooks/folder/useGetDriveFolders.hook";
 import { useHideHidden } from "@/schemas/auth/useHideHidden.hook";
+import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
+import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
+import { ActionType } from "@/constants/action-type";
 
 export default function DriveIdPage() {
     const params = useParams<{ driveId: string }>();
@@ -43,6 +46,12 @@ export default function DriveIdPage() {
         refetch();
     });
 
+    const {
+        items,
+        createFolderOpen,
+        setCreateFolderOpen,
+    } = useContextMenu();
+
     if (isLoading) {
         return <div>Loading...</div>;
     }
@@ -53,17 +62,12 @@ export default function DriveIdPage() {
 
     return (
         <>
-            <AppContextMenu items={bgroundMenuItems}>
-                <div>
+            <AppContextMenu items={items}>
+                <div className="flex-1 w-full">
                     <AppBreadcrumb
                         items={[
-                            {
-                                label: "Drive",
-                                href: "/drives",
-                            },
-                            {
-                                label: data.driveName,
-                            },
+                            { label: "Drive", href: "/drives" },
+                            { label: data.driveName },
                         ]}
                     />
 
@@ -101,7 +105,7 @@ export default function DriveIdPage() {
                                 key={item.id}
                                 id={item.id}
                                 name={item.folderName}
-                                driveId={item.driveId}
+                                driveId={item.driveId ?? ""}
                                 parentFolderId={item.parentFolderId}
                                 isHidden={item.status === "SHOW" ? false : true}
                                 permissionType={item.permissionType ?? undefined}
@@ -110,6 +114,13 @@ export default function DriveIdPage() {
                     </div>
                 </div>
             </AppContextMenu>
+
+            <CreateFolderDialog
+                open={createFolderOpen}
+                onOpenChange={setCreateFolderOpen}
+                driveId={driveId}
+                parentFolderId={null}
+            />
 
             <VerifyPasswordDialog
                 open={verifyPasswordOpen}

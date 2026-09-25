@@ -20,5 +20,5 @@ export class CreateFolderDTO {
         example: "6b702242-dd2d-4e8a-a6ec-8c785f3ead83",
     })
     @IsUUID()
-    driveId!: string
+    driveId?: string
 }
