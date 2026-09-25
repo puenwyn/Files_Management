@@ -205,7 +205,9 @@ export const folderService = {
             );
             const result = createApiResponseSchema(folderResponseSchema).parse(response.data);
             return result.data!;
-        } catch (error) {
+        } catch (error: unknown) {
+            
+            console.log("This is error" ,error);
             if (axios.isAxiosError(error)) {
                 const responseData = error.response?.data;
                 if (responseData.error?.code === ErrorCode.NOT_FOUND) {

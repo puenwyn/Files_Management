@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {children}
                 </div>
             </section>
-            <Resource />
+            {/* <Resource /> */}
         </main>
     )
 }

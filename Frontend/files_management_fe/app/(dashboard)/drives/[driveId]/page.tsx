@@ -104,6 +104,7 @@ export default function DriveIdPage() {
                                 driveId={item.driveId}
                                 parentFolderId={item.parentFolderId}
                                 isHidden={item.status === "SHOW" ? false : true}
+                                permissionType={item.permissionType ?? undefined}
                             />
                         ))}
                     </div>

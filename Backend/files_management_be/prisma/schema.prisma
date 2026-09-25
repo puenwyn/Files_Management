@@ -107,7 +107,7 @@ model Folder {
   id             String       @id @default(uuid())
   folderName     String       @db.VarChar(255)
   parentFolderId String?
-  driveId        String
+  driveId        String?
   status         FolderStatus @default(SHOW)
   passwordHash   String?
   isDeleted      Boolean      @default(false)
@@ -115,7 +115,7 @@ model Folder {
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
-  drive        Drive      @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  drive        Drive?     @relation(fields: [driveId], references: [id], onDelete: Cascade)
   parentFolder Folder?    @relation("FolderChildren", fields: [parentFolderId], references: [id])
   childFolders Folder[]   @relation("FolderChildren")
   acls         ACL[]

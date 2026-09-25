@@ -13,7 +13,7 @@ export class FolderResponseDTO {
     parentFolderId!: string | null;
 
     @ApiProperty()
-    driveId!: string;
+    driveId!: string | null;
 
     @ApiProperty({
         enum: FolderStatus,

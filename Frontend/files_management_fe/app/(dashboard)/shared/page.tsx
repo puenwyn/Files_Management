@@ -7,8 +7,6 @@ import PageTitle from "@/components/dashboard/layout/Title/page-title";
 import AppTableHeader from "@/components/shared/table/app-table-header";
 import AppTableItem from "@/components/shared/table/app-table-item";
 import { useGetSharedFolders } from "@/hooks/acl/useGetSharedFolders.hook";
-import { useGetDriveFolders } from "@/hooks/folder/useGetDriveFolders.hook";
-import { useGetTrashFolders } from "@/hooks/folder/useGetTrashFolders.hook";
 import { useViewModeStore } from "@/stores/view-mode.store";
 
 export default function SharedPage() {
@@ -20,6 +18,8 @@ export default function SharedPage() {
     const viewMode = useViewModeStore(
         (state) => state.viewMode
     );
+
+    console.log("folders:", sharedFolders);
 
     return (
         <main className="space-y-5">
@@ -42,6 +42,7 @@ export default function SharedPage() {
                             driveId={item.driveId}
                             parentFolderId={item.parentFolderId}
                             isHidden={item.status === "HIDDEN"}
+                            permissionType={item.permissionType}
                         />
                     ))}
                 </AppGridView>

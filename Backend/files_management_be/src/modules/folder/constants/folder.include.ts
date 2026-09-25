@@ -1,8 +1,11 @@
 import { Prisma } from "@prisma/client";
 
 export const folderWithOwnerInclude = {
-    drive: {
-        include: {
+    acls: {
+        where: {
+            isOwner: true,
+        },
+        select: {
             user: {
                 select: {
                     id: true,

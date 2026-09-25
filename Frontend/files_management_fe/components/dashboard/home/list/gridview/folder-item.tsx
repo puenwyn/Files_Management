@@ -3,6 +3,7 @@ import { ShareDialog } from "@/components/share/share-dialog/share-dialog";
 import RenameFolderDialog from "@/components/shared/dialog/rename-dialog";
 import AppDropdownMenu from "@/components/shared/dropdown-menu/app-dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { PermissionType } from "@/constants/permission-type";
 import { useFolderMenu } from "@/hooks/action/useFolderMenu.hook";
 import { cn } from "@/lib/utils";
 import { EllipsisVertical } from "lucide-react";
@@ -15,6 +16,7 @@ interface FolderItemProps {
     driveId: string;
     parentFolderId: string | null;
     isHidden: boolean;
+    permissionType?: PermissionType | null
     // onRename?: () => void;
     // onHide?: () => void;
     // onDelete?: () => void;
@@ -26,6 +28,7 @@ export default function FolderItem({
     driveId,
     parentFolderId,
     isHidden,
+    permissionType
     // onRename,
     // onHide,
     // onDelete
@@ -42,7 +45,8 @@ export default function FolderItem({
     } = useFolderMenu(
         id,
         driveId,
-        parentFolderId
+        parentFolderId,
+        permissionType
     );
 
     return (

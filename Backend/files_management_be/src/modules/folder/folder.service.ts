@@ -25,6 +25,8 @@ export class FolderService {
         folder: FolderWithOwner,
         permissionType: PermissionType | null = null
     ): FolderResponseDTO {
+        const owner = folder.acls[0];
+
         return {
             id: folder.id,
             folderName: folder.folderName,
@@ -34,11 +36,11 @@ export class FolderService {
             createdAt: folder.createdAt,
             updatedAt: folder.updatedAt,
             owner: {
-                id: folder.drive.user.id,
-                fullName: folder.drive.user.fullName,
+                id: owner.user.id,
+                fullName: owner.user.fullName,
             },
             permissionType,
-        }
+        };
     }
 
     async checkDrive(driveId: string, userId: string) {
@@ -63,21 +65,27 @@ export class FolderService {
 
     async createFolder(
         userId: string,
-        driveId: string,
+        driveId: string | undefined,
         parentFolderId: string | undefined,
         folderName: string
     ) {
-        let actualDriveId = driveId;
+
+        if (!driveId && !parentFolderId) throw new BadRequestException(
+            "Either driveId or parentFolderId must be provided!"
+        );
+
+        if (driveId && parentFolderId) throw new BadRequestException(
+            "Provide either driveId or parentFolderId, not both!"
+        );
+
         if (parentFolderId) {
             const parent = await this.prisma.folder.findUnique({
                 where: { id: parentFolderId },
             });
             if (!parent) throw new NotFoundException("Parent is not found!");
-
-            actualDriveId = parent.driveId;
             await this.checkFolderAccess(parentFolderId, userId, PermissionType.EDIT,);
         } else {
-            await this.checkDrive(driveId, userId);
+            await this.checkDrive(driveId!, userId);
         }
 
         const result = await this.prisma.$transaction(async (tx) => {
@@ -85,7 +93,7 @@ export class FolderService {
                 data: {
                     folderName,
                     parentFolderId,
-                    driveId: actualDriveId
+                    driveId: driveId
                 },
             });
             await this.aclService.createACL(tx, {
@@ -240,25 +248,49 @@ export class FolderService {
                     status: FolderStatus.SHOW,
                 }),
             },
-            include: folderWithOwnerInclude,
+            include: {
+                acls: {
+                    where: {
+                        OR: [
+                            { isOwner: true },
+                            { userId },
+                        ],
+                    },
+                    select: {
+                        isOwner: true,
+                        permissionType: true,
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
             orderBy: {
                 createdAt: "asc"
             }
         });
         return {
-            folders: folders.map((folder) => ({
-                id: folder.id,
-                folderName: folder.folderName,
-                parentFolderId: folder.parentFolderId,
-                driveId: folder.driveId,
-                status: folder.status,
-                createdAt: folder.createdAt,
-                updatedAt: folder.updatedAt,
-                owner: {
-                    id: folder.drive.user.id,
-                    fullName: folder.drive.user.fullName
-                }
-            })),
+            folders: folders.map((folder) => {
+                const owner = folder.acls.find((acl) => acl.isOwner);
+                const userACL = folder.acls.find((acl) => acl.user.id === userId);
+                return {
+                    id: folder.id,
+                    folderName: folder.folderName,
+                    parentFolderId: folder.parentFolderId,
+                    driveId: folder.driveId,
+                    status: folder.status,
+                    createdAt: folder.createdAt,
+                    updatedAt: folder.updatedAt,
+                    owner: {
+                        id: owner!.user.id,
+                        fullName: owner!.user.fullName,
+                    },
+                    permissionType: userACL!.permissionType,
+                };
+            }),
             showHidden
         }
     }
@@ -273,25 +305,49 @@ export class FolderService {
                     status: FolderStatus.SHOW,
                 }),
             },
-            include: folderWithOwnerInclude,
+            include: {
+                acls: {
+                    where: {
+                        OR: [
+                            { isOwner: true },
+                            { userId },
+                        ],
+                    },
+                    select: {
+                        isOwner: true,
+                        permissionType: true,
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
             orderBy: {
                 createdAt: "asc"
             }
         });
         return {
-            folders: folders.map((folder) => ({
-                id: folder.id,
-                folderName: folder.folderName,
-                parentFolderId: folder.parentFolderId,
-                driveId: folder.driveId,
-                status: folder.status,
-                createdAt: folder.createdAt,
-                updatedAt: folder.updatedAt,
-                owner: {
-                    id: folder.drive.user.id,
-                    fullName: folder.drive.user.fullName
-                },
-            })),
+            folders: folders.map((folder) => {
+                const owner = folder.acls.find((acl) => acl.isOwner);
+                const userACL = folder.acls.find((acl) => acl.user.id === userId);
+                return {
+                    id: folder.id,
+                    folderName: folder.folderName,
+                    parentFolderId: folder.parentFolderId,
+                    driveId: folder.driveId,
+                    status: folder.status,
+                    createdAt: folder.createdAt,
+                    updatedAt: folder.updatedAt,
+                    owner: {
+                        id: owner!.user.id,
+                        fullName: owner!.user.fullName,
+                    },
+                    permissionType: userACL!.permissionType,
+                };
+            }),
             showHidden
         }
     }

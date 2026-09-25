@@ -22,6 +22,7 @@ export const authService = {
             const result = createApiResponseSchema(loginResponseSchema).parse(response.data);
             return result.data!;
         } catch (error: unknown) {
+            console.log("This is error" ,error);
             if (axios.isAxiosError(error)) {
                 const responseData = error.response?.data;
                 if (responseData.error?.code === ErrorCode.UNAUTHORIZED) {

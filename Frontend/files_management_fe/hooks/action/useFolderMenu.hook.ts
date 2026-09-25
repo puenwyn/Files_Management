@@ -8,15 +8,15 @@ export function useFolderMenu(
     folderId: string,
     driveId: string,
     parentFolderId: string | null,
-    permission: PermissionType
+    permissionType?: PermissionType | null
 ) {
 
     const [renameOpen, setRenameOpen] = useState(false);
     const [hideOpen, setHideOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
 
-    const canEdit = permission === PermissionType.EDIT || permission === PermissionType.SHARE;
-    const canShare = permission === PermissionType.SHARE;
+    const canEdit = permissionType === PermissionType.EDIT || permissionType === PermissionType.SHARE;
+    const canShare = permissionType === PermissionType.SHARE;
 
     const {
         deleteFolderMutation,
@@ -25,6 +25,11 @@ export function useFolderMenu(
         error: errorLoading,
         isSuccess: isDeleteSuccess
     } = useDeleteFolder(folderId, driveId, parentFolderId);
+
+    console.log("permission:", permissionType);
+    console.log("PermissionType.SHARE:", PermissionType.SHARE);
+    console.log("canShare:", canShare);
+    console.log("equal:", permissionType === PermissionType.SHARE);
 
 
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {

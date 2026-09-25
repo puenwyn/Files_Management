@@ -9,7 +9,7 @@ export class FolderDetailResponseDTO {
     folderName!: string;
 
     @ApiProperty()
-    driveId!: string;
+    driveId!: string | null;
 
     @ApiProperty()
     createdAt!: Date;
