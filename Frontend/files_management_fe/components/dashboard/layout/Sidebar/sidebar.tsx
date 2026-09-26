@@ -5,6 +5,7 @@ import SidebarSection from "./sidebar-section";
 import BasicDivider from "../Divider/basic-divider";
 import SidebarStorage from "./sidebar-storage";
 import Image from "next/image";
+import { Separator } from "@/components/ui/separator";
 
 export default function Sidebar() {
     return (
@@ -45,9 +46,9 @@ export default function Sidebar() {
                 </nav>
             </SidebarSection>
 
-            <BasicDivider />
+            {/* <BasicDivider /> */}
 
-            <SidebarSection title="Storage">
+            {/* <SidebarSection title="Storage">
                 <nav className="flex flex-col gap-2">
                     {sidebarStorageItems.map((item, index) => {
                         const Icon = item.icon;
@@ -62,9 +63,10 @@ export default function Sidebar() {
                     })}
                 </nav>
                 <SidebarStorage />
-            </SidebarSection>
-
-            <BasicDivider />
+            </SidebarSection> */}
+            <div className="py-4">
+                <Separator />
+            </div>
 
             <nav className="flex flex-col gap-2">
                 {sidebarFooterItems.map((item, index) => {

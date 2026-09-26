@@ -1,4 +1,6 @@
 "use client"
+import StateView from "@/components/common/state-view/state-view";
+import { stateViewData } from "@/components/common/state-view/state-view.data";
 import FolderItem from "@/components/dashboard/home/list/gridview/folder-item";
 import { AppBreadcrumb } from "@/components/shared/breadcrumb/app-breadcrumb";
 import AppContextMenu from "@/components/shared/contextmenu/app-context-menu";
@@ -17,6 +19,7 @@ export default function FilesPage() {
     const {
         data,
         isPending,
+        isFetching,
         isError,
         error,
         refetch
@@ -37,7 +40,14 @@ export default function FilesPage() {
         folderPath?.driveId ?? ""
     );
 
-    console.log("=============", data)
+    console.log({
+        folderId,
+        data,
+        isPending,
+        isFetching,
+        isError,
+        error,
+    });
 
     const folders = folderPath?.folders ?? [];
 
@@ -61,23 +71,35 @@ export default function FilesPage() {
         })),
     ];
 
+    // if (isF) {
+    //     return null; //SKELETON
+    // }
+
     return (
         <main className="min-h-full flex flex-col space-y-5">
             <AppBreadcrumb items={breadcrumbItems} />
             <AppContextMenu items={items}>
-                <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-                    {data.map((item) => (
-                        <FolderItem
-                            key={item.id}
-                            id={item.id}
-                            name={item.folderName}
-                            driveId={item.driveId}
-                            parentFolderId={item.parentFolderId}
-                            isHidden={item.status === "SHOW" ? false : true}
-                            permissionType={item.permissionType ?? undefined}
-                        />
-                    ))}
-                </div>
+                {data.length === 0 ? (
+                    <div className="h-full flex items-center justify-center">
+                        <StateView {...stateViewData.emptyFolder} />
+                    </div>
+
+                ) : (
+                    <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+                        {data.map((item) => (
+                            <FolderItem
+                                key={item.id}
+                                id={item.id}
+                                name={item.folderName}
+                                driveId={item.driveId ?? ""}
+                                parentFolderId={item.parentFolderId}
+                                isHidden={item.status === "HIDDEN"}
+                                permissionType={item.permissionType ?? undefined}
+                                canAccess={item.isAccessed}
+                            />
+                        ))}
+                    </div>
+                )}
             </AppContextMenu>
 
             <CreateFolderDialog

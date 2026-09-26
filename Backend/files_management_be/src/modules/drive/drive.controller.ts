@@ -7,7 +7,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 
 @Controller("drive")
 export class DriveController {
-    constructor(private readonly drive: DriveService) { }
+    constructor(private readonly driveService: DriveService) { }
 
     // @Post()
     // @UseGuards(JwtAuthGuard)
@@ -26,7 +26,15 @@ export class DriveController {
     async getDrives(
         @Req() req: AuthenticatedRequest
     ) {
-        return this.drive.getDrives(req.user.id);
+        return this.driveService.getDrives(req.user.id);
+    }
+
+    @Get("storage")
+    @UseGuards(JwtAuthGuard)
+    async getTotalStorage(
+        @Req() req: AuthenticatedRequest
+    ) {
+        return this.driveService.getTotalStorage(req.user.id);
     }
 
     @Get(":id")
@@ -38,7 +46,7 @@ export class DriveController {
         @Req() req: AuthenticatedRequest,
         @Param("id") id: string
     ) {
-        return this.drive.findDriveById(id, req.user.id);
+        return this.driveService.findDriveById(id, req.user.id);
     }
 
     @Patch(":id/rename")
@@ -48,9 +56,9 @@ export class DriveController {
     })
     async renameDrive(
         @Param("id") id: string,
+        @Req() req: AuthenticatedRequest,
         @Body() dto: RenameDriveDTO,
-        @Req() req: AuthenticatedRequest
     ) {
-        return this.drive.renameDrive(id, req.user.id, dto.newDriveName);
+        return this.driveService.renameDrive(id, req.user.id, dto.newDriveName);
     }
 }

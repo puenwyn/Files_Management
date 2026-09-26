@@ -5,7 +5,7 @@ import { CommonResponse, commonResponseSchema } from "@/schemas/common/common-re
 import { CreateFolderRequest } from "@/schemas/folder/create-folder.schema";
 import { FolderDetailResponse, folderDetailResponseSchema } from "@/schemas/folder/folder-detail-response.schema";
 import { FolderPathResponse, folderPathResponseSchema } from "@/schemas/folder/folder-path-item.schema";
-import { FolderListResponse, folderListResponseSchema, FolderResponse, folderResponseSchema, FolderTrashListResponse, folderTrashListResponseSchema } from "@/schemas/folder/folder-response.schema";
+import { FolderChildrenListResponse, folderChildrenListResponseSchema, FolderListResponse, folderListResponseSchema, FolderResponse, folderResponseSchema, FolderTrashListResponse, folderTrashListResponseSchema } from "@/schemas/folder/folder-response.schema";
 import { HideFolderRequest } from "@/schemas/folder/hide-folder.schema";
 import { RenameFolderRequest } from "@/schemas/folder/rename-folder.schema";
 import { ShowFolderRequest } from "@/schemas/folder/show-folder.schema";
@@ -30,12 +30,12 @@ export const folderService = {
         }
     },
 
-    getFolderChildrens: async (folderId: string): Promise<FolderListResponse> => {
+    getFolderChildrens: async (folderId: string): Promise<FolderChildrenListResponse> => {
         try {
             const response = await axiosClient.get(
                 `/folder/${folderId}/children`
             );
-            const result = createApiResponseSchema(folderListResponseSchema).parse(response.data);
+            const result = createApiResponseSchema(folderChildrenListResponseSchema).parse(response.data);
             return result.data!;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -64,6 +64,9 @@ export const folderService = {
                 const responseData = error.response?.data;
                 if (responseData.error?.code === ErrorCode.NOT_FOUND) {
                     throw new Error("Not found");
+                }
+                if (responseData.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error("You dont't have permissions on this folder");
                 }
             }
             throw new Error("Can't connect to server");

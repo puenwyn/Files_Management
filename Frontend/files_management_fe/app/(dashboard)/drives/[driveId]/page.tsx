@@ -16,6 +16,8 @@ import { useHideHidden } from "@/schemas/auth/useHideHidden.hook";
 import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
 import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
 import { ActionType } from "@/constants/action-type";
+import StateView from "@/components/common/state-view/state-view";
+import { stateViewData } from "@/components/common/state-view/state-view.data";
 
 export default function DriveIdPage() {
     const params = useParams<{ driveId: string }>();
@@ -62,44 +64,35 @@ export default function DriveIdPage() {
 
     return (
         <>
+            <AppBreadcrumb
+                items={[
+                    { label: "Drive", href: "/drives" },
+                    { label: data.driveName },
+                ]}
+            />
+
+            <div className="flex items-center justify-between mb-4">
+                <Button
+                    variant="outline"
+                    disabled={isHideLoading}
+                    onClick={() => {
+                        if (showHidden) {
+                            hideHidden();
+                        } else {
+                            setVerifyPasswordOpen(true);
+                        }
+                    }}
+                >
+                    {showHidden ? "Hide hidden" : "Show hidden"}
+                </Button>
+            </div>
             <AppContextMenu items={items}>
-                <div className="flex-1 w-full">
-                    <AppBreadcrumb
-                        items={[
-                            { label: "Drive", href: "/drives" },
-                            { label: data.driveName },
-                        ]}
-                    />
-
-                    <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-xl font-semibold">
-                            {data.driveName}
-                        </h1>
-
-                        <Button
-                            variant="outline"
-                            disabled={isHideLoading}
-                            onClick={() => {
-                                if (showHidden) {
-                                    hideHidden();
-                                } else {
-                                    setVerifyPasswordOpen(true);
-                                }
-                            }}
-                        >
-                            {showHidden ? "Hide hidden" : "Show hidden"}
-                        </Button>
+                {folders.length === 0 ? (
+                    <div className="h-full flex items-center justify-center">
+                        <StateView {...stateViewData.emptyFolder} />
                     </div>
-
-                    <div
-                        className="
-                            grid
-                            grid-cols-2
-                            md:grid-cols-3
-                            xl:grid-cols-5
-                            gap-4
-                        "
-                    >
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                         {folders.map((item) => (
                             <FolderItem
                                 key={item.id}
@@ -112,7 +105,7 @@ export default function DriveIdPage() {
                             />
                         ))}
                     </div>
-                </div>
+                )}
             </AppContextMenu>
 
             <CreateFolderDialog

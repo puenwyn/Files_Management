@@ -17,9 +17,7 @@ interface FolderItemProps {
     parentFolderId: string | null;
     isHidden: boolean;
     permissionType?: PermissionType | null
-    // onRename?: () => void;
-    // onHide?: () => void;
-    // onDelete?: () => void;
+    canAccess?: boolean
 }
 
 export default function FolderItem({
@@ -28,10 +26,8 @@ export default function FolderItem({
     driveId,
     parentFolderId,
     isHidden,
-    permissionType
-    // onRename,
-    // onHide,
-    // onDelete
+    permissionType,
+    canAccess
 }: FolderItemProps) {
 
     const router = useRouter();
@@ -52,9 +48,15 @@ export default function FolderItem({
     return (
         <>
             <div
-                onDoubleClick={() => router.push(`/files/${id}`)}
+                onDoubleClick={() => {
+                    if (canAccess === false) return;
+                    router.push(`/files/${id}`)
+                }}
                 className={cn(
                     "bg-border/35 hover:bg-border/75 p-3 rounded-lg cursor-pointer",
+                    canAccess === false
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer hover:bg-border/75",
                     isHidden ? "bg-card/50 text-foreground/50" : "bg-card text-foreground"
                 )}
             >
@@ -65,20 +67,22 @@ export default function FolderItem({
                         width={30}
                         height={30}
                     />
-                    <AppDropdownMenu items={items}>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="
-                        rounded-full
-                        hover:bg-muted-foreground/5
-                        active:bg-muted-foreground/10
-                        cursor-pointer
-                    "
-                        >
-                            <EllipsisVertical className="size-4" />
-                        </Button>
-                    </AppDropdownMenu>
+                    {canAccess !== false && (
+                        <AppDropdownMenu items={items}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="
+                                    rounded-full
+                                    hover:bg-muted-foreground/5
+                                    active:bg-muted-foreground/10
+                                    cursor-pointer
+                                "
+                            >
+                                <EllipsisVertical className="size-4" />
+                            </Button>
+                        </AppDropdownMenu>
+                    )}
 
                 </div>
                 <span className="font-medium">{name}</span>

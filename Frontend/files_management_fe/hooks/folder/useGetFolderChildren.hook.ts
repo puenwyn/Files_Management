@@ -12,6 +12,7 @@ export function useGetFolderChildren(folderId: string) {
         data: query.data?.folders ?? [],
         showHidden: query.data?.showHidden,
         isPending: query.isPending,
+        isFetching: query.isFetching,
         isError: query.isError,
         error: query.error,
         refetch: query.refetch,

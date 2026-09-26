@@ -27,9 +27,19 @@ export const folderListResponseSchema = z.object({
     showHidden: z.boolean(),
 });
 
+export const folderChildrenResponseSchema = folderResponseSchema.extend({
+    isAccessed: z.boolean(),
+});
+
+export const folderChildrenListResponseSchema = z.object({
+    folders: z.array(folderChildrenResponseSchema),
+    showHidden: z.boolean(),
+});
+
 export const folderTrashListResponseSchema = z.array(folderResponseSchema);
 
 export type FolderResponse = z.infer<typeof folderResponseSchema>;
 export type FolderListCommonResponse = z.infer<typeof folderTrashListResponseSchema>;
 export type FolderListResponse = z.infer<typeof folderListResponseSchema>;
 export type FolderTrashListResponse = z.infer<typeof folderTrashListResponseSchema>;
+export type FolderChildrenListResponse = z.infer<typeof folderChildrenListResponseSchema>;

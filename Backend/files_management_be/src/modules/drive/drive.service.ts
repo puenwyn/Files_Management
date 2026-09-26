@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Drive, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DriveResponseDTO } from "./dtos/drive-response.dto";
+import { StorageResponseDTO } from "./dtos/storage-response.dto";
 
 @Injectable()
 export class DriveService {
@@ -118,6 +119,26 @@ export class DriveService {
                 deletedAt: new Date()
             }
         })
+    }
+
+    async getTotalStorage(userId: string): Promise<StorageResponseDTO> {
+        const result = await this.prisma.drive.aggregate({
+            where: { userId, isDeleted: false },
+            _sum: {
+                totalSpace: true,
+                usedSpace: true
+            },
+        });
+        const totalSpace = Number(result._sum.totalSpace);
+        const usedSpace = Number(result._sum.usedSpace);
+
+        const usedPercent = totalSpace > 0 ? (usedSpace / totalSpace) * 100 : 0;
+
+        return {
+            totalSpace,
+            usedSpace,
+            usedPercent
+        }
     }
 
 }

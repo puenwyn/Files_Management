@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DriveService } from "../drive/drive.service";
 import { ActivityAction, FolderStatus, Notification, NotificationType, PermissionType, ResourceType } from "@prisma/client";
@@ -295,15 +295,27 @@ export class FolderService {
         }
     }
 
-    async getFolderChildrens(folderId: string, userId: string, showHidden: boolean = false) {
-        await this.checkFolderAccess(folderId, userId, PermissionType.VIEW, showHidden);
+    async getFolderChildrens(
+        folderId: string,
+        userId: string,
+        showHidden: boolean = false,
+    ) {
+        await this.checkFolderAccess(
+            folderId,
+            userId,
+            PermissionType.VIEW,
+            showHidden,
+        );
+
         const folders = await this.prisma.folder.findMany({
             where: {
                 parentFolderId: folderId,
                 isDeleted: false,
-                ...(showHidden ? {} : {
-                    status: FolderStatus.SHOW,
-                }),
+                ...(showHidden
+                    ? {}
+                    : {
+                        status: FolderStatus.SHOW,
+                    }),
             },
             include: {
                 acls: {
@@ -314,6 +326,7 @@ export class FolderService {
                         ],
                     },
                     select: {
+                        userId: true,
                         isOwner: true,
                         permissionType: true,
                         user: {
@@ -326,13 +339,19 @@ export class FolderService {
                 },
             },
             orderBy: {
-                createdAt: "asc"
-            }
+                createdAt: "asc",
+            },
         });
+
         return {
             folders: folders.map((folder) => {
                 const owner = folder.acls.find((acl) => acl.isOwner);
-                const userACL = folder.acls.find((acl) => acl.user.id === userId);
+                const userACL = folder.acls.find((acl) => acl.userId === userId);
+
+                if (!owner) throw new InternalServerErrorException(
+                    `Folder ${folder.id} does not have an owner ACL`,
+                );
+
                 return {
                     id: folder.id,
                     folderName: folder.folderName,
@@ -342,14 +361,15 @@ export class FolderService {
                     createdAt: folder.createdAt,
                     updatedAt: folder.updatedAt,
                     owner: {
-                        id: owner!.user.id,
-                        fullName: owner!.user.fullName,
+                        id: owner.user.id,
+                        fullName: owner.user.fullName,
                     },
-                    permissionType: userACL!.permissionType,
+                    permissionType: userACL?.permissionType,
+                    isAccessed: !!userACL
                 };
             }),
-            showHidden
-        }
+            showHidden,
+        };
     }
 
     async checkFolderAccess(
@@ -531,37 +551,25 @@ export class FolderService {
 
         const folders = result.reverse();
 
-        const ownerACL = await this.prisma.aCL.findUnique({
-            where: {
-                userId_folderId: { userId, folderId },
-            },
-            select: {
-                isOwner: true,
-            },
-        });
-
-        if (ownerACL?.isOwner) {
-            return {
-                driveId: folders[0].driveId,
-                isShared: false,
-                folders: folders.map((folder) => ({
-                    id: folder.id,
-                    folderName: folder.folderName,
-                })),
-            };
-        }
-
         const sharedFolders = await this.aclService.getSharedFolders(userId);
 
-        const sharedRootIndex = folders.findIndex((folder) =>
-            sharedFolders.some((shared) => shared.id === folder.id)
+        const sharedFolderIds = new Set(
+            sharedFolders.map((folder) => folder.id)
         );
 
-        const visibleFolders = folders.slice(sharedRootIndex);
+        const sharedRootIndex = folders.findIndex((folder) =>
+            sharedFolderIds.has(folder.id)
+        );
+
+        const isShared = sharedRootIndex !== -1;
+
+        const visibleFolders = isShared
+            ? folders.slice(sharedRootIndex)
+            : folders;
 
         return {
             driveId: folders[0].driveId,
-            isShared: true,
+            isShared,
             folders: visibleFolders.map((folder) => ({
                 id: folder.id,
                 folderName: folder.folderName,

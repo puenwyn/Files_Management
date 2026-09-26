@@ -7,9 +7,9 @@ export const sidebarItems = [
         href: "/home"
     },
     {
-        title: "My Files",
-        icon: Folder,
-        href: "/files"
+        title: "Drives",
+        icon: HardDrive,
+        href: "/drives"
     },
     {
         title: "Shared",
