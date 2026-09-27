@@ -92,7 +92,7 @@ export default function DriveIdPage() {
                         <StateView {...stateViewData.emptyFolder} />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                         {folders.map((item) => (
                             <FolderItem
                                 key={item.id}

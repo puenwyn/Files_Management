@@ -1,24 +1,18 @@
-"use client"
-import { ShareDialog } from "@/components/share/share-dialog/share-dialog";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import StateView from "@/components/common/state-view/state-view";
+import { stateViewData } from "@/components/common/state-view/state-view.data";
+import PageTitle from "@/components/dashboard/layout/Title/page-title";
 
 export default function StarredPage() {
-    const [shareOpen, setShareOpen] = useState(false);
 
     return (
-        <>
-            <Button onClick={() => setShareOpen(true)}>
-                Share
-            </Button>
-
-            <ShareDialog
-                open={shareOpen}
-                onOpenChange={setShareOpen}
-                resourceId="test-folder-123"
-                resourceName="My Folder"
-                resourceType="folder"
+        <main className="min-h-full flex flex-col space-y-5">
+            <PageTitle
+                title="Starred"
+                subTitle="Your starred files and folders will appear here"
             />
-        </>
+            <div className="h-full flex items-center justify-center">
+                <StateView {...stateViewData.emptyRecent} />
+            </div>
+        </main>
     )
 }

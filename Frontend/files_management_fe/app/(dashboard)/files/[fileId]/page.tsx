@@ -85,7 +85,7 @@ export default function FilesPage() {
                     </div>
 
                 ) : (
-                    <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                         {data.map((item) => (
                             <FolderItem
                                 key={item.id}

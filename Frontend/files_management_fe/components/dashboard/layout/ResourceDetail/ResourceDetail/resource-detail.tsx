@@ -6,8 +6,8 @@ import ResourceDetailAccess from "./resource-detail-access"
 import { useGetFolderDetail } from "@/hooks/folder/useGetFolderDetail.hook";
 
 interface ResourceDetailProps {
-    resource: ResourceType;
-    resourceId: string;
+    resource: ResourceType | null;
+    resourceId: string | null;
 }
 
 export default function ResourceDetail({
@@ -15,7 +15,7 @@ export default function ResourceDetail({
     resourceId
 }: ResourceDetailProps) {
 
-    const { data, isLoading } = useGetFolderDetail(resourceId);
+    const { data, isLoading } = useGetFolderDetail(resourceId ?? "");
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -28,6 +28,12 @@ export default function ResourceDetail({
     return (
         <div className="">
             <ResourceSection title={`${resource === ResourceType.FOLDER ? "Folder" : "File"} detail`}>
+                {resource === ResourceType.FILE && (
+                    <ResourceDetailInfoItem
+                        title="Type"
+                        content="Video"
+                    />
+                )}
                 <ResourceDetailInfoItem
                     title="Type"
                     content="Video"

@@ -6,7 +6,7 @@ export const stateViewData = {
     },
 
     emptyTrash: {
-        illustration: "/illustrations/ChatGPT_NOT_FOUND.png",
+        illustration: "/illustrations/ChatGPT_TRASH_FOLDER.png",
         title: "Trash is empty",
         description: "Deleted files and folders will appear here.",
     },
@@ -17,8 +17,14 @@ export const stateViewData = {
         description: "Files and folders shared with you will appear here.",
     },
 
+    emptyRecent: {
+        illustration: "/illustrations/ChatGPT_RECENT_FOLDER.png",
+        title: "No recent items",
+        description: "Recent files you accessed will appear here.",
+    },
+
     emptyStarred: {
-        illustration: "/illustrations/empty-starred.png",
+        illustration: "/illustrations/ChatGPT_STARRED_FOLDER.png",
         title: "No starred items",
         description: "Star files and folders to find them quickly later.",
     },
@@ -27,6 +33,12 @@ export const stateViewData = {
         illustration: "/illustrations/no-search-result.png",
         title: "No results found",
         description: "Try searching with different keywords.",
+    },
+
+    noResource: {
+        illustration: "/illustrations/ChatGPT_NULL_RESOURCE.png",
+        title: "Resource is null",
+        description: "Choose any folder or file.",
     },
 
     notFound: {

@@ -13,7 +13,7 @@ export default function DrivesPage() {
                 title="My Drives"
                 subTitle="Manage your drives and storage"
             />
-            <div className="grid grid-cols-4 gap-4">
+            <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                 {drives.map((drive) => (
                     <DriveItem
                         key={drive.id}

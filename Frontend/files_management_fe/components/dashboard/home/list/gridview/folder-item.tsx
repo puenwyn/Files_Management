@@ -4,8 +4,9 @@ import RenameFolderDialog from "@/components/shared/dialog/rename-dialog";
 import AppDropdownMenu from "@/components/shared/dropdown-menu/app-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { PermissionType } from "@/constants/permission-type";
-import { useFolderMenu } from "@/hooks/action/useFolderMenu.hook";
+import { useResourceMenu } from "@/hooks/action/useResourceMenu";
 import { cn } from "@/lib/utils";
+import { ResourceType } from "@/types/resource.type";
 import { EllipsisVertical } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -38,8 +39,9 @@ export default function FolderItem({
         setRenameOpen,
         shareOpen,
         setShareOpen,
-    } = useFolderMenu(
+    } = useResourceMenu(
         id,
+        ResourceType.FOLDER,
         driveId,
         parentFolderId,
         permissionType

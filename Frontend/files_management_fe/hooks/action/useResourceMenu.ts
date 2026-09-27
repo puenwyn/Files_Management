@@ -3,9 +3,13 @@ import { MenuItem, toolMenuItems } from "@/constants/dashboard/menu";
 import { useState } from "react";
 import { useDeleteFolder } from "../folder/useDeleteFolder.hook";
 import { PermissionType } from "@/constants/permission-type";
+import { ResourceType } from "@/types/resource.type";
+import { useResourceDetailStore } from "@/stores/resource-detail.store";
+import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
 
-export function useFolderMenu(
-    folderId: string,
+export function useResourceMenu(
+    resourceId: string,
+    resourceType: ResourceType,
     driveId: string,
     parentFolderId: string | null,
     permissionType?: PermissionType | null
@@ -18,13 +22,21 @@ export function useFolderMenu(
     const canEdit = permissionType === PermissionType.EDIT || permissionType === PermissionType.SHARE;
     const canShare = permissionType === PermissionType.SHARE;
 
+    const openResource = useResourceDetailStore(
+        (state) => state.openResource
+    );
+
+    const openConfirm = useConfirmDialogStore(
+        (state) => state.openConfirm
+    );
+
     const {
         deleteFolderMutation,
         isLoading: isDeleteLoading,
         isError: isDeleteError,
         error: errorLoading,
         isSuccess: isDeleteSuccess
-    } = useDeleteFolder(folderId, driveId, parentFolderId);
+    } = useDeleteFolder(resourceId, driveId, parentFolderId);
 
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
@@ -76,15 +88,23 @@ export function useFolderMenu(
                 case ActionType.INFORMATION:
                     return {
                         ...newItem,
-                        onClick: () => {
-                            console.log("Information");
-                        },
+                        onClick: () => openResource(resourceId, resourceType),
                     };
 
                 case ActionType.DELETE:
                     return {
                         ...newItem,
-                        onClick: () => deleteFolderMutation.mutate(),
+                        onClick: () =>
+                            openConfirm({
+                                title: "Delete resource?",
+                                description: "Are you sure you want to delete this resource?",
+                                confirmText: "Delete",
+                                cancelText: "Cancel",
+                                destructive: true,
+                                onConfirm: () => {
+                                    deleteFolderMutation.mutate();
+                                },
+                            }),
                     };
 
                 default:

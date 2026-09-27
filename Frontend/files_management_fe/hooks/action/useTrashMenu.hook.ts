@@ -1,11 +1,16 @@
 import { ActionType } from "@/constants/action-type";
 import { MenuItem, trashMenuItems } from "@/constants/dashboard/menu";
 import { useRestoreFolder } from "../folder/useRestoreFolder.hook";
+import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
 
 export function useTrashMenu(folderId: string) {
     const {
         restoreFolderMutation,
     } = useRestoreFolder();
+
+    const openConfirm = useConfirmDialogStore(
+        (state) => state.openConfirm
+    );
 
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
@@ -13,15 +18,33 @@ export function useTrashMenu(folderId: string) {
                 case ActionType.RESTORE:
                     return {
                         ...item,
-                        onClick: () => restoreFolderMutation.mutate(folderId),
+                        onClick: () =>
+                            openConfirm({
+                                title: "Restore resource?",
+                                description: "This resource will be restored in your folder",
+                                confirmText: "Delete",
+                                cancelText: "Cancel",
+                                destructive: true,
+                                onConfirm: () => {
+                                    restoreFolderMutation.mutate(folderId);
+                                },
+                            }),
                     };
 
                 case ActionType.DELETE:
                     return {
                         ...item,
-                        onClick: () => {
-                            console.log("Delete permanently", folderId);
-                        },
+                        onClick: () =>
+                            openConfirm({
+                                title: "Delete resource?",
+                                description: "Are you sure you want to delete this resource?",
+                                confirmText: "Delete",
+                                cancelText: "Cancel",
+                                destructive: true,
+                                onConfirm: () => {
+                                    console.log("Hi");
+                                },
+                            }),
                     };
 
                 default:
