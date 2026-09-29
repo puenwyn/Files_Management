@@ -60,6 +60,7 @@ export default function AppContextMenu({
                                                             }
                                                             action={subItem.action}
                                                             destructive={subItem.destructive}
+                                                            disabled={subItem.disabled}
                                                             onClick={subItem.onClick}
                                                         />
                                                     </React.Fragment>
@@ -77,6 +78,7 @@ export default function AppContextMenu({
                                     }
                                     action={item.action}
                                     destructive={item.destructive}
+                                    disabled={item.disabled}
                                     onClick={item.onClick}
                                 />
                             )}

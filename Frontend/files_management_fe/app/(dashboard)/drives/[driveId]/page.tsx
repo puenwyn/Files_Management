@@ -15,7 +15,6 @@ import { useGetDriveFolders } from "@/hooks/folder/useGetDriveFolders.hook";
 import { useHideHidden } from "@/schemas/auth/useHideHidden.hook";
 import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
 import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
-import { ActionType } from "@/constants/action-type";
 import StateView from "@/components/common/state-view/state-view";
 import { stateViewData } from "@/components/common/state-view/state-view.data";
 

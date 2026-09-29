@@ -1,9 +1,16 @@
 import { ActionType } from "@/constants/action-type";
 import { bgroundMenuItems, MenuItem } from "@/constants/dashboard/menu";
+import { PermissionType } from "@/constants/permission-type";
 import { useState } from "react";
 
-export function useContextMenu() {
+export function useContextMenu(
+    permissionType?: PermissionType
+) {
     const [createFolderOpen, setCreateFolderOpen] = useState(false);
+    const canEdit =
+        permissionType === undefined ||
+        permissionType === PermissionType.EDIT ||
+        permissionType === PermissionType.SHARE;
 
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
@@ -19,12 +26,14 @@ export function useContextMenu() {
                 case ActionType.NEW_FOLDER:
                     return {
                         ...newItem,
+                        disabled: !canEdit,
                         onClick: () => setCreateFolderOpen(true),
                     };
 
                 case ActionType.UPLOAD_FILE:
                     return {
                         ...newItem,
+                        disabled: !canEdit,
                         onClick: () => {
                             console.log("Upload file");
                         },
@@ -33,6 +42,7 @@ export function useContextMenu() {
                 case ActionType.UPLOAD_FOLDER:
                     return {
                         ...newItem,
+                        disabled: !canEdit,
                         onClick: () => {
                             console.log("Upload folder");
                         },

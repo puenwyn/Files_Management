@@ -11,7 +11,7 @@ export default function StarredPage() {
                 subTitle="Your starred files and folders will appear here"
             />
             <div className="h-full flex items-center justify-center">
-                <StateView {...stateViewData.emptyRecent} />
+                <StateView {...stateViewData.emptyStarred} />
             </div>
         </main>
     )

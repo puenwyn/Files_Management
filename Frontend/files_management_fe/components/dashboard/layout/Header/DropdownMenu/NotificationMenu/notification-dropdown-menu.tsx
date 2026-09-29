@@ -3,14 +3,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useGetNotifications } from "@/hooks/notification/useGetNotifications.hook";
 import { Bell } from "lucide-react";
 import NotificationItem from "./notification-item";
+import { useState } from "react";
 
 export default function NotificationDropdownMenu() {
+    const [open, setOpen] = useState(false);
     const { data: notifications = [], isLoading } = useGetNotifications();
 
     return (
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger>
-                <AppIconButton icon={Bell} />
+                <AppIconButton icon={Bell} active={open} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 ring-2 ring-border/35 bg-card/75 backdrop-blur-3xl">
                 <div className="border-b px-4 py-3">

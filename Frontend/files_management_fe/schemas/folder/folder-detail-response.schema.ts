@@ -11,7 +11,7 @@ export const resourceDetailUserSchema = z.object({
 export const folderDetailResponseSchema = z.object({
     id: z.string(),
     folderName: z.string(),
-    driveId: z.string(),
+    driveId: z.string().nullable(),
     createdAt: z.string(),
     updatedAt: z.string(),
     owner: resourceDetailUserSchema,

@@ -5,21 +5,7 @@ import Toolbar from "@/components/dashboard/home/toolbar/toolbar";
 export default function HomePage() {
     return (
         <main className="space-y-5">
-            <section>
-                <span>{"My Files > My Folder"}</span>
-            </section>
-
-            <section>
-                <Toolbar />
-            </section>
-
-            <section>
-                <FolderGridView />
-            </section>
-
-            <section>
-                <FileGridView />
-            </section>
+            This is Home Page
         </main>
     )
 }

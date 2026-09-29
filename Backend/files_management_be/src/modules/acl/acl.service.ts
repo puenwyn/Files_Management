@@ -72,6 +72,23 @@ export class ACLService {
         return acl;
     }
 
+    async getFolderPermission(
+        folderId: string,
+        userId: string,
+    ) {
+        const acl = await this.prisma.aCL.findFirst({
+            where: {
+                folderId,
+                userId,
+            },
+            select: {
+                permissionType: true,
+            },
+        });
+
+        return acl?.permissionType;
+    }
+
     async getSharedFolders(userId: string): Promise<FolderResponseDTO[]> {
         const folders = await this.prisma.$queryRaw<
             {

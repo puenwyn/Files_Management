@@ -32,6 +32,7 @@ export const folderService = {
 
     getFolderChildrens: async (folderId: string): Promise<FolderChildrenListResponse> => {
         try {
+            // await new Promise((resolve) => setTimeout(resolve, 2000));
             const response = await axiosClient.get(
                 `/folder/${folderId}/children`
             );

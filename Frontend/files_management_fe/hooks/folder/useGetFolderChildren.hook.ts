@@ -10,6 +10,7 @@ export function useGetFolderChildren(folderId: string) {
 
     return {
         data: query.data?.folders ?? [],
+        permissionType: query.data?.permissionType,
         showHidden: query.data?.showHidden,
         isPending: query.isPending,
         isFetching: query.isFetching,

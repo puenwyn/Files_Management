@@ -4,8 +4,8 @@ import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 interface AppDropdownItemProps {
     icon: React.ReactNode;
     action: string;
-    destructive?: boolean
-    disabled?: boolean
+    destructive?: boolean;
+    disabled?: boolean;
     onClick?: () => void;
 }
 

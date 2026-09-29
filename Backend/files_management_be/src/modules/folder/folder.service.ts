@@ -306,6 +306,7 @@ export class FolderService {
             PermissionType.VIEW,
             showHidden,
         );
+        const permissionType = await this.aclService.getFolderPermission(folderId, userId);
 
         const folders = await this.prisma.folder.findMany({
             where: {
@@ -368,6 +369,7 @@ export class FolderService {
                     isAccessed: !!userACL
                 };
             }),
+            permissionType: permissionType,
             showHidden,
         };
     }

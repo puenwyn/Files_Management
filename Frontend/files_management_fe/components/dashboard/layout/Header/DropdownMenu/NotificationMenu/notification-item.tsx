@@ -17,7 +17,7 @@ export default function NotificationItem({
     const notificationTitle = getNotificationTitle(notification);
 
     return (
-        <DropdownMenuItem className="px-3 py-2 gap-3">
+        <DropdownMenuItem className="px-3 py-2 gap-3 cursor-pointer">
             <div className={`flex h-10 w-10 shrink-0 items-center 
                 justify-center rounded-full ${config.bgClass}`}>
                 <Icon className={`h-5 w-5 ${config.iconClass}`} />

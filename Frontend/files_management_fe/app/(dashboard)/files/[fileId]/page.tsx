@@ -2,6 +2,7 @@
 import StateView from "@/components/common/state-view/state-view";
 import { stateViewData } from "@/components/common/state-view/state-view.data";
 import FolderItem from "@/components/dashboard/home/list/gridview/folder-item";
+import FolderItemSkeleton from "@/components/dashboard/home/list/gridview/folder-item-skeleton";
 import { AppBreadcrumb } from "@/components/shared/breadcrumb/app-breadcrumb";
 import AppContextMenu from "@/components/shared/contextmenu/app-context-menu";
 import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
@@ -18,6 +19,7 @@ export default function FilesPage() {
 
     const {
         data,
+        permissionType,
         isPending,
         isFetching,
         isError,
@@ -34,21 +36,11 @@ export default function FilesPage() {
         items,
         createFolderOpen,
         setCreateFolderOpen,
-    } = useContextMenu();
+    } = useContextMenu(permissionType);
 
     const { data: drive } = useFindDrive(
         folderPath?.driveId ?? ""
     );
-
-    console.log({
-        folderId,
-        data,
-        isPending,
-        isFetching,
-        isError,
-        error,
-    });
-
     const folders = folderPath?.folders ?? [];
 
     const breadcrumbItems = [
@@ -71,21 +63,22 @@ export default function FilesPage() {
         })),
     ];
 
-    // if (isF) {
-    //     return null; //SKELETON
-    // }
-
     return (
         <main className="min-h-full flex flex-col space-y-5">
             <AppBreadcrumb items={breadcrumbItems} />
             <AppContextMenu items={items}>
-                {data.length === 0 ? (
+                {isPending ? (
+                    <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {Array.from({ length: 10 }).map((_, index) => (
+                            <FolderItemSkeleton key={index} />
+                        ))}
+                    </div>
+                ) : data.length === 0 ? (
                     <div className="h-full flex items-center justify-center">
                         <StateView {...stateViewData.emptyFolder} />
                     </div>
-
                 ) : (
-                    <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                    <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {data.map((item) => (
                             <FolderItem
                                 key={item.id}

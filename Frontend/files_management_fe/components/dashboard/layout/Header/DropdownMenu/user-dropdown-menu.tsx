@@ -42,10 +42,10 @@ export default function UserDropdownMenu() {
                 "
                 >
                     <Avatar className="size-8">
-                        <AvatarImage
+                        {/* <AvatarImage
                             src={"/assets/images/aurorabackground.jpg"}
-                        />
-                        <AvatarFallback>Avatar</AvatarFallback>
+                        /> */}
+                        <AvatarFallback>{profile?.fullName.charAt(0)}</AvatarFallback>
                     </Avatar>
 
                     <span className="w-20 truncate text-xs font-medium text-foreground">
@@ -58,13 +58,13 @@ export default function UserDropdownMenu() {
 
                 <DropdownMenuContent align="end" className="w-80 ring-2 ring-border/35 bg-card/75 backdrop-blur-3xl">
 
-                    <div className="p-4 text-center flex flex-col justify-center items-center">
+                    <div className="p-4 text-center flex flex-col justify-center items-center gap-3">
                         <span className="text-lg font-semibold">Nguyễn Huy</span>
                         <Avatar className="size-18">
-                            <AvatarImage
+                            {/* <AvatarImage
                                 src={"/assets/images/aurorabackground.jpg"}
-                            />
-                            <AvatarFallback>Avatar</AvatarFallback>
+                            /> */}
+                            <AvatarFallback className="text-4xl">{profile?.fullName.charAt(0)}</AvatarFallback>
                             <AvatarBadge className="!size-4">
                                 <Camera className="size-3.5" />
                             </AvatarBadge>

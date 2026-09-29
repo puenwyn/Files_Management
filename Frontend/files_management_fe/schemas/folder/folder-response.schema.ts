@@ -33,6 +33,7 @@ export const folderChildrenResponseSchema = folderResponseSchema.extend({
 
 export const folderChildrenListResponseSchema = z.object({
     folders: z.array(folderChildrenResponseSchema),
+    permissionType: z.enum(PermissionType),
     showHidden: z.boolean(),
 });
 
