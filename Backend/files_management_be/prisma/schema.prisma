@@ -77,6 +77,7 @@ model User {
   activities            Activity[]
   notificationsReceived Notification[] @relation("NotificationReceiver")
   notificationsSent     Notification[] @relation("NotificationActor")
+  starreds              Starred[]
 }
 
 model RefreshToken {
@@ -112,7 +113,7 @@ model Drive {
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   folders Folder[]
-  files   File[]
+  // files   File[]
 
   @@index([userId])
 }
@@ -134,7 +135,7 @@ model Folder {
   childFolders Folder[]   @relation("FolderChildren")
   acls         ACL[]
   activities   Activity[]
-  files        File[]
+  // files        File[]
 
   @@index([parentFolderId])
   @@index([driveId])
@@ -191,60 +192,74 @@ model Notification {
   @@index([resourceId, resourceType])
 }
 
-model File {
-  id              String     @id @default(uuid())
-  name            String     @unique @db.VarChar(100)
-  extension       String     @db.VarChar(10)
-  driveId         String?
-  folderId        String?
-  status          FileStatus @default(MODIFY)
-  size            BigInt
-  latestVersionId String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  accessedAt      DateTime?
+model Starred {
+  id           String       @id @default(uuid())
+  userId       String
+  resourceId   String
+  resourceType ResourceType
+  createdAt    DateTime     @default(now())
 
-  drive  Drive?  @relation(fields: [driveId], references: [id], onDelete: Cascade)
-  folder Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fileVersions FileVersion[]
-  // latestVersion FileVersion?  @relation("LatestFileVersion", fields: [latestVersionId], references: [id])
-
-  @@index([driveId])
-  @@index([folderId])
-  @@index([latestVersionId])
+  @@unique([userId, resourceId, resourceType])
+  @@index([userId])
+  @@index([resourceId, resourceType])
 }
 
-model FileVersion {
-  id            String     @id @default(uuid())
-  fileId        String
-  blobId        String
-  versionNumber Int
-  mimeType      String     @db.VarChar(100)
-  encrypt       Boolean    @default(false)
-  scanStatus    ScanStatus @default(PENDING)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+// model File {
+//   id              String     @id @default(uuid())
+//   name            String     @unique @db.VarChar(100)
+//   extension       String     @db.VarChar(10)
+//   driveId         String?
+//   folderId        String?
+//   status          FileStatus @default(MODIFY)
+//   size            BigInt
+//   latestVersionId String?
+//   createdAt       DateTime   @default(now())
+//   updatedAt       DateTime   @updatedAt
+//   accessedAt      DateTime?
 
-  file  File         @relation(fields: [fileId], references: [id])
-  blob  PhysicalBlob @relation(fields: [blobId], references: [id])
-  files File[]
+//   drive  Drive?  @relation(fields: [driveId], references: [id], onDelete: Cascade)
+//   folder Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
 
-  @@unique([fileId, versionNumber])
-  @@index([fileId])
-  @@index([blobId])
-}
+//   fileVersions FileVersion[]
+//   // latestVersion FileVersion?  @relation("LatestFileVersion", fields: [latestVersionId], references: [id])
 
-model PhysicalBlob {
-  id        String   @id @default(uuid())
-  relPath   String   @db.VarChar(500)
-  sha256    String   @unique @db.VarChar(100)
-  refCount  Int      @default(0)
-  sizeBytes BigInt
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+//   @@index([driveId])
+//   @@index([folderId])
+//   @@index([latestVersionId])
+// }
 
-  fileVersions FileVersion[]
+// model FileVersion {
+//   id            String     @id @default(uuid())
+//   fileId        String
+//   blobId        String
+//   versionNumber Int
+//   mimeType      String     @db.VarChar(100)
+//   encrypt       Boolean    @default(false)
+//   scanStatus    ScanStatus @default(PENDING)
+//   createdAt     DateTime   @default(now())
+//   updatedAt     DateTime   @updatedAt
 
-  @@index([sha256])
-}
+//   file  File         @relation(fields: [fileId], references: [id])
+//   blob  PhysicalBlob @relation(fields: [blobId], references: [id])
+//   files File[]
+
+//   @@unique([fileId, versionNumber])
+//   @@index([fileId])
+//   @@index([blobId])
+// }
+
+// model PhysicalBlob {
+//   id        String   @id @default(uuid())
+//   relPath   String   @db.VarChar(500)
+//   sha256    String   @unique @db.VarChar(100)
+//   refCount  Int      @default(0)
+//   sizeBytes BigInt
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   fileVersions FileVersion[]
+
+//   @@index([sha256])
+// }
