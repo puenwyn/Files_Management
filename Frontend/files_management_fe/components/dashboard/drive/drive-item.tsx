@@ -3,6 +3,7 @@ import { EllipsisVertical, HardDrive } from "lucide-react";
 import AppIconButton from "../iconbutton/app-icon-button";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import { formatFileSize } from "@/utils/file.type";
 
 interface DriveItemProps {
     id: string
@@ -27,7 +28,7 @@ export default function DriveItem({
     return (
         <Card
             onClick={() => router.push(`/drives/${id}`)}
-            className="p-3 bg-card cursor-pointer hover:bg-muted/30"
+            className="p-3 bg-card border-none cursor-pointer hover:bg-muted/30"
         >
             <div className="flex items-center justify-between">
                 <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
@@ -39,7 +40,7 @@ export default function DriveItem({
             </div>
             <div className="flex justify-between gap-3">
                 <span className="text-primary shrink-0">
-                    <HardDrive className="size-10" />
+                    <HardDrive className="size-6" />
                 </span>
                 <p className="flex-1 line-clamp-2 font-semibold select-none">{driveName}</p>
             </div>
@@ -50,8 +51,8 @@ export default function DriveItem({
                 />
             </div>
             <div className="flex gap-1 justify-end items-center">
-                <span className="text-xs font-semibold select-none">{`${usedStorage} GB used`}</span>
-                <span className="text-xs select-none">{`of ${totalStorage} GB`}</span>
+                <span className="text-xs font-semibold select-none">{`${formatFileSize(usedPercent)} used`}</span>
+                <span className="text-xs select-none">{`of ${formatFileSize(totalStorage)}`}</span>
             </div>
         </Card>
     )

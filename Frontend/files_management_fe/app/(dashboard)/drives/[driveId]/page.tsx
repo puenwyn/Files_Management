@@ -17,6 +17,7 @@ import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
 import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
 import StateView from "@/components/common/state-view/state-view";
 import { stateViewData } from "@/components/common/state-view/state-view.data";
+import ResourceToolbar from "@/components/share/resource-toolbar/resource-toolbar";
 
 export default function DriveIdPage() {
     const params = useParams<{ driveId: string }>();
@@ -84,6 +85,7 @@ export default function DriveIdPage() {
                 >
                     {showHidden ? "Hide hidden" : "Show hidden"}
                 </Button>
+                <ResourceToolbar driveId={driveId} parentFolderId={null} />
             </div>
             <AppContextMenu items={items}>
                 {folders.length === 0 ? (

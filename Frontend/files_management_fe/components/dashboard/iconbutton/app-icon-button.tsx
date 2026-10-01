@@ -31,7 +31,7 @@ export default function AppIconButton({
             `}
         >
             <span className="relative">
-                <Icon className="size-4" />
+                <Icon className="size-5" />
 
                 {dot && (
                     <span

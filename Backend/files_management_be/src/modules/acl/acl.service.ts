@@ -104,35 +104,45 @@ export class ACLService {
                 ownerFullName: string;
             }[]
         >`
-        WITH RECURSIVE ancestors AS (
-            SELECT f.id AS "folderId", f."parentFolderId" AS "ancestorId"
-            FROM "Folder" f
+        WITH RECURSIVE folder_roots AS (
+            SELECT f.id AS "folderId", f.id AS "rootFolderId" FROM "Folder" f
+            WHERE f."parentFolderId" IS NULL
+
             UNION ALL
+
+            SELECT child.id AS "folderId", fr."rootFolderId" FROM "Folder" child
+            INNER JOIN folder_roots fr ON child."parentFolderId" = fr."folderId"
+        ),
+
+        ancestors AS (
+            SELECT f.id AS "folderId", f."parentFolderId" AS "ancestorId" FROM "Folder" f
+
+            UNION ALL
+
             SELECT a."folderId", parent."parentFolderId"
             FROM ancestors a
             INNER JOIN "Folder" parent ON parent.id = a."ancestorId"
             WHERE a."ancestorId" IS NOT NULL
         )
-        SELECT
-            f.id, f."folderName", f."parentFolderId", f."driveId", f.status, f."createdAt", f."updatedAt",
-            acl."permissionType",
-            owner.id AS "ownerId",
-            owner."fullName" AS "ownerFullName"
+
+        SELECT f.id, f."folderName", f."parentFolderId", root."driveId", f.status, f."createdAt", f."updatedAt",
+            acl."permissionType", owner.id AS "ownerId", owner."fullName" AS "ownerFullName"
         FROM "ACL" acl
+
         INNER JOIN "Folder" f ON f.id = acl."folderId"
-        INNER JOIN "Drive" d ON d.id = f."driveId"
+        INNER JOIN folder_roots fr ON fr."folderId" = f.id
+        INNER JOIN "Folder" root ON root.id = fr."rootFolderId"
+        INNER JOIN "Drive" d ON d.id = root."driveId"
         INNER JOIN "User" owner ON owner.id = d."userId"
-        WHERE acl."userId" = ${userId}
-            AND f."isDeleted" = false
-            AND d."isDeleted" = false
+        WHERE acl."userId" = ${userId} AND f."isDeleted" = false AND d."isDeleted" = false
             AND d."userId" != ${userId}
             AND NOT EXISTS (
                 SELECT 1 FROM ancestors a
                 INNER JOIN "ACL" ancestor_acl
                     ON ancestor_acl."folderId" = a."ancestorId"
                     AND ancestor_acl."userId" = ${userId}
-                WHERE
-                    a."folderId" = f.id
+
+                WHERE a."folderId" = f.id
             )
     `;
 
