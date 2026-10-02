@@ -42,7 +42,7 @@ export const stateViewData = {
     },
 
     notFound: {
-        illustration: "/illustrations/not-found.png",
+        illustration: "/illustrations/ChatGPT_NOT_FOUND.png",
         title: "Page not found",
         description: "The page you're looking for doesn't exist.",
     },

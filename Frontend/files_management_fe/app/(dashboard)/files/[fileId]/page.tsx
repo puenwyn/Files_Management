@@ -3,6 +3,7 @@ import StateView from "@/components/common/state-view/state-view";
 import { stateViewData } from "@/components/common/state-view/state-view.data";
 import FolderItem from "@/components/dashboard/home/list/gridview/folder-item";
 import FolderItemSkeleton from "@/components/dashboard/home/list/gridview/folder-item-skeleton";
+import ResourceGrid from "@/components/share/resource-list/grid/resource-grid";
 import { AppBreadcrumb } from "@/components/shared/breadcrumb/app-breadcrumb";
 import AppContextMenu from "@/components/shared/contextmenu/app-context-menu";
 import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
@@ -11,6 +12,7 @@ import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
 import { useFindDrive } from "@/hooks/drive/useFindDrive.hook";
 import { useGetFolderChildren } from "@/hooks/folder/useGetFolderChildren.hook";
 import { useGetFolderPath } from "@/hooks/folder/useGetFolderPath.hook";
+import { folderToResource } from "@/utils/resource.util";
 import { useParams } from "next/navigation";
 
 export default function FilesPage() {
@@ -42,6 +44,7 @@ export default function FilesPage() {
         folderPath?.driveId ?? ""
     );
     const folders = folderPath?.folders ?? [];
+    const resources = data?.map(folderToResource) ?? [];
 
     const breadcrumbItems = [
         {
@@ -78,20 +81,7 @@ export default function FilesPage() {
                         <StateView {...stateViewData.emptyFolder} />
                     </div>
                 ) : (
-                    <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {data.map((item) => (
-                            <FolderItem
-                                key={item.id}
-                                id={item.id}
-                                name={item.folderName}
-                                driveId={item.driveId ?? ""}
-                                parentFolderId={item.parentFolderId}
-                                isHidden={item.status === "HIDDEN"}
-                                permissionType={item.permissionType ?? undefined}
-                                canAccess={item.isAccessed}
-                            />
-                        ))}
-                    </div>
+                    <ResourceGrid data={resources} />
                 )}
             </AppContextMenu>
 

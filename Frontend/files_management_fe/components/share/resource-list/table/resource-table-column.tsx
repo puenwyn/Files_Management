@@ -1,16 +1,14 @@
-import { ResourceType } from "@/types/resource.type";
+import { Resource } from "@/types/resource.type";
 import { ReactNode } from "react";
 
-export interface ResourceTableResource {
-    id: string;
-    name: string;
-    type: ResourceType;
+export interface ResourceTableResource extends Resource {
     owner?: string | null;
     modifiedAt?: string | null;
     size?: string | null;
     location?: string | null;
     sharedBy?: string | null;
     deletedAt?: string | null;
+    starredAt?: string | null;
 }
 
 export type ResourceTableColumnKey =
@@ -21,6 +19,7 @@ export type ResourceTableColumnKey =
     | "location"
     | "sharedBy"
     | "deletedAt"
+    | "starredAt"
     | "actions";
 
 export interface ResourceTableColumn {
@@ -51,5 +50,29 @@ export const defaultResourceTableColumns: ResourceTableColumn[] = [
         key: "size",
         label: "Size",
         getValue: (resource) => resource.size ?? "-",
+    },
+];
+
+export const starredResourceTableColumns: ResourceTableColumn[] = [
+    {
+        key: "name",
+        label: "Name",
+        className: "w-full",
+        getValue: (resource) => resource.name,
+    },
+    {
+        key: "owner",
+        label: "Owner",
+        getValue: (resource) => resource.owner ?? "-",
+    },
+    {
+        key: "modifiedAt",
+        label: "Modified",
+        getValue: (resource) => resource.modifiedAt ?? "-",
+    },
+    {
+        key: "starredAt",
+        label: "Starred",
+        getValue: (resource) => resource.starredAt ?? "-",
     },
 ];
