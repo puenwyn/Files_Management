@@ -6,13 +6,15 @@ import { PermissionType } from "@/constants/permission-type";
 import { ResourceType } from "@/types/resource.type";
 import { useResourceDetailStore } from "@/stores/resource-detail.store";
 import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
+import { Star, StarOff } from "lucide-react";
 
 export function useResourceMenu(
     resourceId: string,
     resourceType: ResourceType,
     driveId: string,
     parentFolderId: string | null,
-    permissionType?: PermissionType | null
+    permissionType?: PermissionType | null,
+    isStarred?: boolean
 ) {
 
     const [renameOpen, setRenameOpen] = useState(false);
@@ -105,6 +107,20 @@ export function useResourceMenu(
                                     deleteFolderMutation.mutate();
                                 },
                             }),
+                    };
+
+                case ActionType.STARRED:
+                    return {
+                        ...newItem,
+                        icon: isStarred ? StarOff : Star,
+                        label: isStarred ? "Remove from Starred" : "Add to Starred",
+                        onClick: () => {
+                            if (isStarred) {
+                                // unstar
+                            } else {
+                                // star
+                            }
+                        },
                     };
 
                 default:

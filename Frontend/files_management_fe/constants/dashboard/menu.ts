@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ExternalLink, EyeClosed, FileUp, FolderUp, Info, Link2, LucideIcon, PenLine, Recycle, Trash2 } from "lucide-react";
+import { ArrowDownToLine, ExternalLink, EyeClosed, FileUp, FolderUp, Info, Link2, LucideIcon, PenLine, Recycle, Star, Trash2 } from "lucide-react";
 import { ActionType } from "../action-type";
 
 export type MenuItem = {
@@ -27,6 +27,11 @@ export const toolMenuItems: MenuItem[] = [
         icon: EyeClosed,
         label: "Hide",
         action: ActionType.HIDE
+    },
+    {
+        icon: Star,
+        label: "Add to Starred",
+        action: ActionType.STARRED,
     },
     {
         icon: ExternalLink,

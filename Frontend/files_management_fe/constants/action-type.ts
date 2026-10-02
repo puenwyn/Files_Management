@@ -12,5 +12,7 @@ export enum ActionType {
     UPLOAD_FILE = "UPLOAD_FILE",
     UPLOAD_FOLDER = "UPLOAD_FOLDER",
 
-    RESTORE = "RESTORE"
+    RESTORE = "RESTORE",
+
+    STARRED = "STARRED"
 }

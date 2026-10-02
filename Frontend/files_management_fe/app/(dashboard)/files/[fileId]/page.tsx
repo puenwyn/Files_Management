@@ -1,9 +1,8 @@
 "use client"
 import StateView from "@/components/common/state-view/state-view";
 import { stateViewData } from "@/components/common/state-view/state-view.data";
-import FolderItem from "@/components/dashboard/home/list/gridview/folder-item";
 import FolderItemSkeleton from "@/components/dashboard/home/list/gridview/folder-item-skeleton";
-import ResourceGrid from "@/components/share/resource-list/grid/resource-grid";
+import ResourceList from "@/components/share/resource-list/resource-list";
 import { AppBreadcrumb } from "@/components/shared/breadcrumb/app-breadcrumb";
 import AppContextMenu from "@/components/shared/contextmenu/app-context-menu";
 import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
@@ -70,18 +69,15 @@ export default function FilesPage() {
         <main className="min-h-full flex flex-col space-y-5">
             <AppBreadcrumb items={breadcrumbItems} />
             <AppContextMenu items={items}>
-                {isPending ? (
-                    <div className="w-full flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {Array.from({ length: 10 }).map((_, index) => (
-                            <FolderItemSkeleton key={index} />
-                        ))}
-                    </div>
-                ) : data.length === 0 ? (
+                {data.length === 0 && !isPending ? (
                     <div className="h-full flex items-center justify-center">
                         <StateView {...stateViewData.emptyFolder} />
                     </div>
                 ) : (
-                    <ResourceGrid data={resources} />
+                    <ResourceList
+                        resources={resources}
+                        isLoading={isPending}
+                    />
                 )}
             </AppContextMenu>
 

@@ -1,25 +1,31 @@
-"use client"
-import { useViewModeStore } from "@/stores/view-mode.store";
-import ResourceTable from "./table/resource-table";
-import { defaultResourceTableColumns, ResourceTableColumn, ResourceTableResource } from "./table/resource-table-column";
+"use client";
+
 import FolderItemSkeleton from "@/components/dashboard/home/list/gridview/folder-item-skeleton";
+import { useViewModeStore } from "@/stores/view-mode.store";
 import ResourceGrid from "./grid/resource-grid";
+import ResourceTable from "./table/resource-table";
+import {
+    defaultResourceTableColumns,
+    ResourceTableColumn,
+    ResourceTableResource,
+} from "./table/resource-table-column";
 
 interface ResourceListProps {
     resources: ResourceTableResource[];
     columns?: ResourceTableColumn[];
-    isLoading?: boolean
+    isLoading?: boolean;
 }
 
 export default function ResourceList({
     resources,
     columns = defaultResourceTableColumns,
-    isLoading = false
+    isLoading = false,
 }: ResourceListProps) {
-
     const viewMode = useViewModeStore(
         (state) => state.viewMode
     );
+
+    console.log(viewMode);
 
     if (isLoading) {
         return (
@@ -33,16 +39,17 @@ export default function ResourceList({
                 )}
 
                 {viewMode === "List" && (
-                    <div>
-                        List Loading
-                    </div>
+                    <ResourceTable
+                        resources={[]}
+                        columns={columns}
+                    />
                 )}
             </div>
         );
     }
 
     return (
-        <div>
+        <div className="w-full">
             {viewMode === "Grid" && (
                 <ResourceGrid data={resources} />
             )}
@@ -54,5 +61,5 @@ export default function ResourceList({
                 />
             )}
         </div>
-    )
+    );
 }
