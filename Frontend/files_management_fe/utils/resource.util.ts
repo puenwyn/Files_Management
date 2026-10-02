@@ -17,5 +17,6 @@ export function folderToResource(
         owner: folder.owner?.fullName ?? null,
         modifiedAt: folder.updatedAt.toISOString(),
         size: null,
+        isStarred: folder.isStarred,
     };
 }

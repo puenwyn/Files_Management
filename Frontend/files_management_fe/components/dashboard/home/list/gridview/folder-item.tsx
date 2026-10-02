@@ -17,8 +17,9 @@ interface FolderItemProps {
     driveId: string;
     parentFolderId: string | null;
     isHidden: boolean;
-    permissionType?: PermissionType | null
-    canAccess?: boolean
+    permissionType?: PermissionType | null;
+    canAccess?: boolean;
+    isStarred?: boolean
 }
 
 export default function FolderItem({
@@ -28,7 +29,8 @@ export default function FolderItem({
     parentFolderId,
     isHidden,
     permissionType,
-    canAccess
+    canAccess,
+    isStarred
 }: FolderItemProps) {
 
     const router = useRouter();
@@ -44,8 +46,11 @@ export default function FolderItem({
         ResourceType.FOLDER,
         driveId,
         parentFolderId,
-        permissionType
+        permissionType,
+        isStarred
     );
+
+    console.log("FOLDER ITEM:", name, isStarred);
 
     return (
         <>

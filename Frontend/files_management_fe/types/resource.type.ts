@@ -14,4 +14,5 @@ export interface Resource {
     permissionType?: PermissionType | null;
     status?: "SHOW" | "HIDDEN";
     isAccessed?: boolean;
+    isStarred?: boolean;
 }

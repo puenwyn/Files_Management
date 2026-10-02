@@ -38,7 +38,8 @@ export default function ResourceTableRow({
         resource.type,
         resource.driveId ?? "",
         resource.parentFolderId,
-        resource.permissionType
+        resource.permissionType,
+        resource.isStarred
     );
 
     const canAccess = resource.isAccessed !== false;

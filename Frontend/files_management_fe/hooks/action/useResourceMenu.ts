@@ -7,6 +7,8 @@ import { ResourceType } from "@/types/resource.type";
 import { useResourceDetailStore } from "@/stores/resource-detail.store";
 import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
 import { Star, StarOff } from "lucide-react";
+import { useAddStarred } from "../starred/useAddStarred.hook";
+import { useRemoveStarred } from "../starred/useRemoveStarred.hook";
 
 export function useResourceMenu(
     resourceId: string,
@@ -14,7 +16,7 @@ export function useResourceMenu(
     driveId: string,
     parentFolderId: string | null,
     permissionType?: PermissionType | null,
-    isStarred?: boolean
+    isStarred: boolean = false
 ) {
 
     const [renameOpen, setRenameOpen] = useState(false);
@@ -39,6 +41,16 @@ export function useResourceMenu(
         error: errorLoading,
         isSuccess: isDeleteSuccess
     } = useDeleteFolder(resourceId, driveId, parentFolderId);
+
+    const { addStarredMutation } = useAddStarred(
+        resourceId,
+        resourceType
+    );
+
+    const { removeStarredMutation } = useRemoveStarred(
+        resourceId,
+        resourceType
+    );
 
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
@@ -113,12 +125,18 @@ export function useResourceMenu(
                     return {
                         ...newItem,
                         icon: isStarred ? StarOff : Star,
-                        label: isStarred ? "Remove from Starred" : "Add to Starred",
+                        label: isStarred
+                            ? "Remove from Starred"
+                            : "Add to Starred",
                         onClick: () => {
+                            console.log("CLICK STARRED");
+
                             if (isStarred) {
-                                // unstar
+                                console.log("REMOVE");
+                                removeStarredMutation.mutate();
                             } else {
-                                // star
+                                console.log("ADD");
+                                addStarredMutation.mutate();
                             }
                         },
                     };

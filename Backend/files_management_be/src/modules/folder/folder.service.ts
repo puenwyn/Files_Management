@@ -237,6 +237,20 @@ export class FolderService {
         return this.mappingFolderResponse(folder);
     }
 
+    private async getStarredFolderIds(userId: string) {
+        const starredFolders = await this.prisma.starred.findMany({
+            where: {
+                userId,
+                resourceType: ResourceType.FOLDER,
+            },
+            select: {
+                resourceId: true,
+            },
+        });
+
+        return starredFolders.map((item) => item.resourceId);
+    }
+
     async getDriveFolders(userId: string, driveId: string, showHidden: boolean = false) {
         await this.checkDrive(driveId, userId);
         const folders = await this.prisma.folder.findMany({
@@ -272,6 +286,9 @@ export class FolderService {
                 createdAt: "asc"
             }
         });
+
+        const starredFolderIds = await this.getStarredFolderIds(userId);
+
         return {
             folders: folders.map((folder) => {
                 const owner = folder.acls.find((acl) => acl.isOwner);
@@ -289,6 +306,7 @@ export class FolderService {
                         fullName: owner!.user.fullName,
                     },
                     permissionType: userACL!.permissionType,
+                    isStarred: starredFolderIds.includes(folder.id),
                 };
             }),
             showHidden
@@ -344,6 +362,8 @@ export class FolderService {
             },
         });
 
+        const starredFolderIds = await this.getStarredFolderIds(userId);
+
         return {
             folders: folders.map((folder) => {
                 const owner = folder.acls.find((acl) => acl.isOwner);
@@ -366,7 +386,8 @@ export class FolderService {
                         fullName: owner.user.fullName,
                     },
                     permissionType: userACL?.permissionType,
-                    isAccessed: !!userACL
+                    isAccessed: !!userACL,
+                    isStarred: starredFolderIds.includes(folder.id),
                 };
             }),
             permissionType: permissionType,

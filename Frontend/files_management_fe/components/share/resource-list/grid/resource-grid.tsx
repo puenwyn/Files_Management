@@ -26,6 +26,7 @@ export default function ResourceGrid({
                                 item.permissionType ?? undefined
                             }
                             canAccess={item.isAccessed}
+                            isStarred={item.isStarred}
                         />
                     );
                 }

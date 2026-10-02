@@ -20,6 +20,7 @@ export const folderResponseSchema = z.object({
         PermissionType.EDIT,
         PermissionType.SHARE,
     ]).nullable().optional(),
+    isStarred: z.boolean().default(false),
 });
 
 export const folderListResponseSchema = z.object({
