@@ -113,7 +113,7 @@ model Drive {
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   folders Folder[]
-  // files   File[]
+  files   File[]
 
   @@index([userId])
 }
@@ -135,7 +135,7 @@ model Folder {
   childFolders Folder[]   @relation("FolderChildren")
   acls         ACL[]
   activities   Activity[]
-  // files        File[]
+  files        File[]
 
   @@index([parentFolderId])
   @@index([driveId])
@@ -206,60 +206,61 @@ model Starred {
   @@index([resourceId, resourceType])
 }
 
-// model File {
-//   id              String     @id @default(uuid())
-//   name            String     @unique @db.VarChar(100)
-//   extension       String     @db.VarChar(10)
-//   driveId         String?
-//   folderId        String?
-//   status          FileStatus @default(MODIFY)
-//   size            BigInt
-//   latestVersionId String?
-//   createdAt       DateTime   @default(now())
-//   updatedAt       DateTime   @updatedAt
-//   accessedAt      DateTime?
+model File {
+  id              String     @id @default(uuid())
+  name            String     @unique @db.VarChar(100)
+  extension       String     @db.VarChar(10)
+  driveId         String?
+  folderId        String?
+  status          FileStatus @default(MODIFY)
+  size            BigInt
+  latestVersionId String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  accessedAt      DateTime?
 
-//   drive  Drive?  @relation(fields: [driveId], references: [id], onDelete: Cascade)
-//   folder Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  drive  Drive?  @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
 
-//   fileVersions FileVersion[]
-//   // latestVersion FileVersion?  @relation("LatestFileVersion", fields: [latestVersionId], references: [id])
+  fileVersions  FileVersion[] @relation("FileVersions")
+  latestVersion FileVersion?  @relation("LatestFileVersion", fields: [latestVersionId], references: [id])
 
-//   @@index([driveId])
-//   @@index([folderId])
-//   @@index([latestVersionId])
-// }
+  @@index([driveId])
+  @@index([folderId])
+  @@index([latestVersionId])
+}
 
-// model FileVersion {
-//   id            String     @id @default(uuid())
-//   fileId        String
-//   blobId        String
-//   versionNumber Int
-//   mimeType      String     @db.VarChar(100)
-//   encrypt       Boolean    @default(false)
-//   scanStatus    ScanStatus @default(PENDING)
-//   createdAt     DateTime   @default(now())
-//   updatedAt     DateTime   @updatedAt
+model FileVersion {
+  id            String     @id @default(uuid())
+  fileId        String
+  blobId        String
+  versionNumber Int
+  mimeType      String     @db.VarChar(100)
+  encrypt       Boolean    @default(false)
+  scanStatus    ScanStatus @default(PENDING)
+  isUploaded    Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-//   file  File         @relation(fields: [fileId], references: [id])
-//   blob  PhysicalBlob @relation(fields: [blobId], references: [id])
-//   files File[]
+  file      File         @relation("FileVersions", fields: [fileId], references: [id])
+  blob      PhysicalBlob @relation(fields: [blobId], references: [id])
+  latestFor File?        @relation("LatestFileVersion")
 
-//   @@unique([fileId, versionNumber])
-//   @@index([fileId])
-//   @@index([blobId])
-// }
+  @@unique([fileId, versionNumber])
+  @@index([fileId])
+  @@index([blobId])
+}
 
-// model PhysicalBlob {
-//   id        String   @id @default(uuid())
-//   relPath   String   @db.VarChar(500)
-//   sha256    String   @unique @db.VarChar(100)
-//   refCount  Int      @default(0)
-//   sizeBytes BigInt
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
+model PhysicalBlob {
+  id        String   @id @default(uuid())
+  relPath   String   @db.VarChar(500)
+  sha256    String   @unique @db.VarChar(100)
+  refCount  Int      @default(0)
+  sizeBytes BigInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-//   fileVersions FileVersion[]
+  fileVersions FileVersion[]
 
-//   @@index([sha256])
-// }
+  @@index([sha256])
+}
