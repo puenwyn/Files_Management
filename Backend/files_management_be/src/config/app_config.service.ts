@@ -107,4 +107,28 @@ export class AppConfigService {
     // get MAIL_FROM(): string {
     //     return this.configService.getOrThrow<EnvSchemaType['MAIL_FROM']>('MAIL_FROM');
     // }
+
+    get MINIO_API_PORT(): number {
+        return this.configService.getOrThrow<EnvSchemaType['MINIO_API_PORT']>("MINIO_API_PORT");
+    }
+
+    get MINIO_CONSOLE_PORT(): number {
+        return this.configService.getOrThrow<EnvSchemaType['MINIO_CONSOLE_PORT']>("MINIO_CONSOLE_PORT");
+    }
+
+    get MINIO_ENDPOINT(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MINIO_ENDPOINT']>("MINIO_ENDPOINT");
+    }
+
+    get MINIO_ROOT_USER(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MINIO_ROOT_USER']>("MINIO_ROOT_USER");
+    }
+
+    get MINIO_ROOT_PASSWORD(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MINIO_ROOT_PASSWORD']>("MINIO_ROOT_PASSWORD");
+    }
+
+    get MINIO_BUCKET(): string {
+        return this.configService.getOrThrow<EnvSchemaType['MINIO_BUCKET']>("MINIO_BUCKET");
+    }
 }

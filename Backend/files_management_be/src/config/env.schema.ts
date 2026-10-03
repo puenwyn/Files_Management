@@ -27,6 +27,13 @@ export const EnvSchema = z.object({
     REDIS_HOST: z.string().default("localhost"),
     REDIS_PORT: z.coerce.number().default(6379),
     REDIS_PASSWORD: z.string().optional(),
+
+    MINIO_API_PORT: z.coerce.number().default(9000),
+    MINIO_CONSOLE_PORT: z.coerce.number().default(9001),
+    MINIO_ENDPOINT: z.string().url(),
+    MINIO_ROOT_USER: z.string(),
+    MINIO_ROOT_PASSWORD: z.string(),
+    MINIO_BUCKET: z.string(),
 });
 
 export type EnvSchemaType = z.infer<typeof EnvSchema>
