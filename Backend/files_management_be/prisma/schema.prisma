@@ -144,17 +144,21 @@ model Folder {
 model ACL {
   id             String         @id @default(uuid())
   userId         String
-  folderId       String
+  folderId       String?
+  fileId         String?
   isOwner        Boolean        @default(false)
   permissionType PermissionType
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  folder Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  file   File?   @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@unique([userId, folderId])
+  @@unique([userId, fileId])
   @@index([folderId])
+  @@index([fileId])
 }
 
 model Activity {
@@ -208,7 +212,7 @@ model Starred {
 
 model File {
   id              String     @id @default(uuid())
-  name            String     @unique @db.VarChar(100)
+  name            String     @db.VarChar(100)
   extension       String     @db.VarChar(10)
   driveId         String?
   folderId        String?
@@ -224,7 +228,9 @@ model File {
 
   fileVersions  FileVersion[] @relation("FileVersions")
   latestVersion FileVersion?  @relation("LatestFileVersion", fields: [latestVersionId], references: [id])
+  acls          ACL[]
 
+  @@unique([driveId, folderId, name, extension])
   @@index([driveId])
   @@index([folderId])
   @@index([latestVersionId])
@@ -236,6 +242,7 @@ model FileVersion {
   blobId        String
   versionNumber Int
   mimeType      String     @db.VarChar(100)
+  size          BigInt
   encrypt       Boolean    @default(false)
   scanStatus    ScanStatus @default(PENDING)
   isUploaded    Boolean    @default(false)

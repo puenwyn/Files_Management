@@ -401,25 +401,41 @@ export class FolderService {
         requiredPermission: PermissionType,
         showHidden: boolean = false
     ) {
-        const acl = await this.aclService.checkPermisison(folderId, userId, requiredPermission);
+        const acl = await this.aclService.checkPermisison(
+            folderId,
+            userId,
+            requiredPermission,
+        );
+
+        if (!acl.folder) {
+            throw new NotFoundException("Folder is not found!");
+        }
 
         const folder = acl.folder;
-        if (showHidden && !acl.isOwner)
-            throw new ForbiddenException("Only the owner can access hidden folders!");
+
+        if (showHidden && !acl.isOwner) {
+            throw new ForbiddenException(
+                "Only the owner can access hidden folders!",
+            );
+        }
 
         const hasDeletedAncestor = await this.hasDeletedAncestor(folderId);
 
-        if (hasDeletedAncestor)
+        if (hasDeletedAncestor) {
             throw new NotFoundException("Folder is not found!");
+        }
 
         if (!showHidden) {
-            const hasHiddenAncestor = await this.hasHiddenAncestor(folderId);
+            const hasHiddenAncestor =
+                await this.hasHiddenAncestor(folderId);
 
             if (
-                acl.folder.status === FolderStatus.HIDDEN ||
+                folder.status === FolderStatus.HIDDEN ||
                 hasHiddenAncestor
             ) {
-                throw new ForbiddenException("This folder is private!");
+                throw new ForbiddenException(
+                    "This folder is private!",
+                );
             }
         }
 

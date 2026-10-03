@@ -13,6 +13,7 @@ import { WebSocketModule } from "./infrastructure/websocket/websocket.module";
 import { NotificationModule } from "./modules/notification/notification.module";
 import { StarredModule } from "./modules/starred/starred.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
+import { FileModule } from './modules/file/file.module';
 
 @Module({
     imports: [
@@ -27,7 +28,8 @@ import { StorageModule } from "./infrastructure/storage/storage.module";
         NotificationModule,
         StarredModule,
         WebSocketModule,
-        StorageModule
+        StorageModule,
+        FileModule
     ],
     controllers: [AppController]
 })

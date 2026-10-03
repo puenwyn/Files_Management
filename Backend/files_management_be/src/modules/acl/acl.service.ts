@@ -22,15 +22,29 @@ export class ACLService {
         tx: Prisma.TransactionClient | PrismaService,
         data: {
             userId: string;
-            folderId: string;
+            folderId?: string;
+            fileId?: string;
             permissionType: PermissionType;
             isOwner?: boolean;
         },
     ) {
+        if (!data.folderId && !data.fileId) {
+            throw new BadRequestException(
+                "Either folderId or fileId must be provided!",
+            );
+        }
+
+        if (data.folderId && data.fileId) {
+            throw new BadRequestException(
+                "Provide either folderId or fileId, not both!",
+            );
+        }
+
         return tx.aCL.create({
             data: {
                 userId: data.userId,
                 folderId: data.folderId,
+                fileId: data.fileId,
                 permissionType: data.permissionType,
                 isOwner: data.isOwner ?? false,
             },
