@@ -596,9 +596,17 @@ export class FolderService {
             sharedFolders.map((folder) => folder.id)
         );
 
-        const sharedRootIndex = folders.findIndex((folder) =>
-            sharedFolderIds.has(folder.id)
-        );
+        const currentFolder = folders[folders.length - 1];
+
+        let sharedRootIndex = -1;
+
+        // Tìm shared root gần nhất từ folder hiện tại đi ngược lên
+        for (let i = folders.length - 1; i >= 0; i--) {
+            if (sharedFolderIds.has(folders[i].id)) {
+                sharedRootIndex = i;
+                break;
+            }
+        }
 
         const isShared = sharedRootIndex !== -1;
 
@@ -607,7 +615,7 @@ export class FolderService {
             : folders;
 
         return {
-            driveId: folders[0].driveId,
+            driveId: currentFolder.driveId ?? folders[0].driveId,
             isShared,
             folders: visibleFolders.map((folder) => ({
                 id: folder.id,

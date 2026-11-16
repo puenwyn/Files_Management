@@ -151,12 +151,10 @@ export class ACLService {
         WHERE acl."userId" = ${userId} AND f."isDeleted" = false AND d."isDeleted" = false
             AND d."userId" != ${userId}
             AND NOT EXISTS (
-                SELECT 1 FROM ancestors a
-                INNER JOIN "ACL" ancestor_acl
-                    ON ancestor_acl."folderId" = a."ancestorId"
-                    AND ancestor_acl."userId" = ${userId}
-
-                WHERE a."folderId" = f.id
+                SELECT 1
+                FROM "ACL" parent_acl
+                WHERE parent_acl."folderId" = f."parentFolderId"
+                AND parent_acl."userId" = ${userId}
             )
     `;
 

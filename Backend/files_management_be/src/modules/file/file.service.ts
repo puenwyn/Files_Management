@@ -243,4 +243,104 @@ export class FileService {
             isUploaded: updatedVersion.isUploaded,
         };
     }
+
+
+    async getDriveFiles(userId: string, driveId: string) {
+        await this.driveService.checkDriveOwnership(driveId, userId);
+
+        const files = await this.prisma.file.findMany({
+            where: {
+                driveId,
+                folderId: null,
+                acls: {
+                    some: {
+                        userId,
+                    },
+                },
+                latestVersion: {
+                    is: {
+                        isUploaded: true,
+                    },
+                },
+            },
+            include: {
+                acls: {
+                    where: { userId },
+                    select: {
+                        permissionType: true,
+                        isOwner: true,
+                    },
+                },
+                latestVersion: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        return files.map((file) => ({
+            ...file,
+            size: file.size.toString(),
+            permissionType: file.acls[0]?.permissionType ?? null,
+            isOwner: file.acls[0]?.isOwner ?? false,
+            acls: undefined,
+        }));
+    }
+
+    async getFolderFiles(userId: string, parentFolderId: string) {
+        await this.folderService.checkFolderAccess(
+            parentFolderId,
+            userId,
+            PermissionType.VIEW,
+        );
+
+        const files = await this.prisma.file.findMany({
+            where: {
+                folderId: parentFolderId,
+                latestVersion: {
+                    is: {
+                        isUploaded: true,
+                    },
+                },
+                OR: [
+                    // User có ACL riêng trên file.
+                    {
+                        acls: {
+                            some: { userId },
+                        },
+                    },
+                    // User không có ACL riêng, kế thừa quyền folder.
+                    {
+                        acls: {
+                            none: { userId },
+                        },
+                    },
+                ],
+            },
+            include: {
+                acls: {
+                    where: { userId },
+                    select: {
+                        permissionType: true,
+                        isOwner: true,
+                    },
+                },
+                latestVersion: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        return files.map((file) => ({
+            ...file,
+            size: file.size.toString(),
+            permissionType:
+                file.acls[0]?.permissionType ?? PermissionType.VIEW,
+            isOwner: file.acls[0]?.isOwner ?? false,
+            isAccessed: file.acls.length > 0,
+            acls: undefined,
+        }));
+    }
+
 }
