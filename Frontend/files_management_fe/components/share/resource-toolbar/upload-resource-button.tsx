@@ -16,6 +16,8 @@ export default function UploadResourceButton({
 }: UploadResourceButtonProps) {
     const [open, setOpen] = useState(false);
 
+    console.log("UploadResourceButton render:", open);
+
     return (
         <>
             <Button
