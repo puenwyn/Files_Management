@@ -245,6 +245,7 @@ export class FileService {
     }
 
 
+
     async getDriveFiles(userId: string, driveId: string) {
         await this.driveService.checkDriveOwnership(driveId, userId);
 
@@ -253,14 +254,10 @@ export class FileService {
                 driveId,
                 folderId: null,
                 acls: {
-                    some: {
-                        userId,
-                    },
+                    some: { userId },
                 },
                 latestVersion: {
-                    is: {
-                        isUploaded: true,
-                    },
+                    is: { isUploaded: true },
                 },
             },
             include: {
@@ -278,14 +275,33 @@ export class FileService {
             },
         });
 
-        return files.map((file) => ({
-            ...file,
-            size: file.size.toString(),
-            permissionType: file.acls[0]?.permissionType ?? null,
-            isOwner: file.acls[0]?.isOwner ?? false,
-            acls: undefined,
-        }));
+        return files.map((file) => {
+            const acl = file.acls[0];
+
+            return {
+                id: file.id,
+                name: file.name,
+                extension: file.extension,
+                driveId: file.driveId,
+                folderId: file.folderId,
+                status: file.status,
+                size: file.size.toString(),
+                latestVersion: file.latestVersion
+                    ? {
+                        ...file.latestVersion,
+                        size: file.latestVersion.size.toString(),
+                    }
+                    : null,
+                createdAt: file.createdAt,
+                updatedAt: file.updatedAt,
+                accessedAt: file.accessedAt,
+                permissionType: acl?.permissionType ?? null,
+                isOwner: acl?.isOwner ?? false,
+                isAccessed: false,
+            };
+        });
     }
+
 
     async getFolderFiles(userId: string, parentFolderId: string) {
         await this.folderService.checkFolderAccess(
@@ -298,24 +314,8 @@ export class FileService {
             where: {
                 folderId: parentFolderId,
                 latestVersion: {
-                    is: {
-                        isUploaded: true,
-                    },
+                    is: { isUploaded: true },
                 },
-                OR: [
-                    // User có ACL riêng trên file.
-                    {
-                        acls: {
-                            some: { userId },
-                        },
-                    },
-                    // User không có ACL riêng, kế thừa quyền folder.
-                    {
-                        acls: {
-                            none: { userId },
-                        },
-                    },
-                ],
             },
             include: {
                 acls: {
@@ -332,15 +332,31 @@ export class FileService {
             },
         });
 
-        return files.map((file) => ({
-            ...file,
-            size: file.size.toString(),
-            permissionType:
-                file.acls[0]?.permissionType ?? PermissionType.VIEW,
-            isOwner: file.acls[0]?.isOwner ?? false,
-            isAccessed: file.acls.length > 0,
-            acls: undefined,
-        }));
+        return files.map((file) => {
+            const acl = file.acls[0];
+
+            return {
+                id: file.id,
+                name: file.name,
+                extension: file.extension,
+                driveId: file.driveId,
+                folderId: file.folderId,
+                status: file.status,
+                size: file.size.toString(),
+                latestVersion: file.latestVersion
+                    ? {
+                        ...file.latestVersion,
+                        size: file.latestVersion.size.toString(),
+                    }
+                    : null,
+                createdAt: file.createdAt,
+                updatedAt: file.updatedAt,
+                accessedAt: file.accessedAt,
+                permissionType: acl?.permissionType ?? PermissionType.VIEW,
+                isOwner: acl?.isOwner ?? false,
+                isAccessed: !!acl,
+            };
+        });
     }
 
 }

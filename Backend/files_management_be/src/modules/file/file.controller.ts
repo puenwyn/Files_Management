@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { FileService } from "./file.service";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -25,5 +25,24 @@ export class FileController {
         @Body() dto: CompleteFileUploadDTO,
     ) {
         return this.fileService.completeUpload(req.user.id, dto);
+    }
+
+    @Get("drive/:id")
+    @UseGuards(JwtAuthGuard)
+    async getDriveFiles(
+        @Param("id") driveId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.fileService.getDriveFiles(req.user.id, driveId);
+    }
+
+    // Get files inside a folder
+    @Get("folder/:folderId")
+    @UseGuards(JwtAuthGuard)
+    async getFolderFiles(
+        @Param("folderId") folderId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.fileService.getFolderFiles(req.user.id, folderId);
     }
 }

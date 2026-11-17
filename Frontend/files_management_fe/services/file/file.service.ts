@@ -1,6 +1,7 @@
 import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
+import { FileListResponse, fileListResponseSchema } from "@/schemas/file/file-response.schema";
 import { completeFileUploadResponseSchema, uploadResponseSchema } from "@/schemas/file/upload-file.schema";
 import { CompleteFileUploadResponse, CreateFileUploadPayload, UploadResponse } from "@/types/file-upload.type";
 import axios from "axios";
@@ -82,6 +83,48 @@ export const fileService = {
             throw new Error(
                 `Upload failed with status ${response.status}`,
             );
+        }
+    },
+
+    getDriveFiles: async (driveId: string): Promise<FileListResponse> => {
+        try {
+            const response = await axiosClient.get(`/file/drive/${driveId}`);
+            const result = createApiResponseSchema(fileListResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error: unknown) {
+            console.log("This is error", error);
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("Drive not found");
+                }
+                if (responseData.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error("You don't have permission to access this drive");
+                }
+            }
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    getFolderFiles: async (folderId: string): Promise<FileListResponse> => {
+        try {
+            const response = await axiosClient.get(`/file/folder/${folderId}`);
+            const result = createApiResponseSchema(
+                fileListResponseSchema
+            ).parse(response.data);
+            return result.data!;
+        } catch (error: unknown) {
+            console.log("This is error", error);
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("Folder not found");
+                }
+                if (responseData.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error("You don't have permission to access this folder");
+                }
+            }
+            throw new Error("Can't connect to server");
         }
     },
 }
