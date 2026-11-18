@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ActivityMetadata } from './types/activity-metadata.type';
-import { Prisma } from '@prisma/client';
+import { Prisma, ResourceType } from '@prisma/client';
 import { ActivityResponseDTO } from './dtos/activity-response.dto';
 
 @Injectable()
@@ -11,16 +11,24 @@ export class ActivityService {
     async createActivity(
         tx: Prisma.TransactionClient | PrismaService,
         userId: string,
-        folderId: string,
-        data: ActivityMetadata
+        resourceId: string,
+        resourceType: ResourceType,
+        data: ActivityMetadata,
     ) {
         return tx.activity.create({
             data: {
                 userId,
-                folderId,
+                folderId:
+                    resourceType === ResourceType.FOLDER
+                        ? resourceId
+                        : null,
+                fileId:
+                    resourceType === ResourceType.FILE
+                        ? resourceId
+                        : null,
                 action: data.action,
-                metadata: data.metadata as Prisma.InputJsonValue
-            }
+                metadata: data.metadata as Prisma.InputJsonValue,
+            },
         });
     }
 

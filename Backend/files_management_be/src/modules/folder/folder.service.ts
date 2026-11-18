@@ -106,6 +106,7 @@ export class FolderService {
                 tx,
                 userId,
                 folder.id,
+                ResourceType.FOLDER,
                 { action: ActivityAction.CREATE, metadata: { folderName } }
             );
             let notification: Notification | undefined;
@@ -176,6 +177,7 @@ export class FolderService {
                 tx,
                 userId,
                 folderId,
+                ResourceType.FOLDER,
                 {
                     action: ActivityAction.RENAME,
                     metadata: {

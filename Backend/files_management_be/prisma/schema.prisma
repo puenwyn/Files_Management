@@ -166,14 +166,17 @@ model Activity {
   userId    String
   action    ActivityAction
   folderId  String?
+  fileId    String?
   metadata  Json?
   createdAt DateTime       @default(now())
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  file   File?   @relation(fields: [fileId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([folderId])
+  @@index([fileId])
   @@index([createdAt])
 }
 
@@ -229,6 +232,7 @@ model File {
   fileVersions  FileVersion[] @relation("FileVersions")
   latestVersion FileVersion?  @relation("LatestFileVersion", fields: [latestVersionId], references: [id])
   acls          ACL[]
+  activities   Activity[]
 
   @@unique([driveId, folderId, name, extension])
   @@index([driveId])

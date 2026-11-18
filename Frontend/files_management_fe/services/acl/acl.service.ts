@@ -2,6 +2,7 @@ import axiosClient from "@/lib/axios/axios";
 import { ACLUserListResponse, aclUserListResponseSchema } from "@/schemas/acl/acl-user-response.schema";
 import { ShareFolderRequest } from "@/schemas/acl/share-folder-request.schema";
 import { ShareFolderResponse, shareFolderResponseSchema } from "@/schemas/acl/share-folder-response.schema";
+import { SharedFileListResponse, sharedFileListResponseSchema } from "@/schemas/acl/shared-file-response.schema";
 import { SharedFolderListResponse, sharedFolderListResponseSchema } from "@/schemas/acl/shared-folder-response.schema";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
 import { FolderListCommonResponse, FolderListResponse, folderTrashListResponseSchema } from "@/schemas/folder/folder-response.schema";
@@ -91,6 +92,24 @@ export const aclService = {
                 }
             }
             throw new Error("Failed to share folder");
+        }
+    },
+
+    getSharedFiles: async (): Promise<SharedFileListResponse> => {
+        try {
+            const response = await axiosClient.get(
+                "/acl/shared/files"
+            );
+            const result = createApiResponseSchema(sharedFileListResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData?.error?.message) {
+                    throw new Error(responseData.error.message);
+                }
+            }
+            throw new Error("Failed to get shared files");
         }
     },
 }

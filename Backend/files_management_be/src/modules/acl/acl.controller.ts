@@ -4,6 +4,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ShareFolderDTO } from "./dtos/share-folder.dto";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ShareFileDTO } from "./dtos/share-file.dto";
 
 @Controller("acl")
 export class ACLController {
@@ -15,6 +16,17 @@ export class ACLController {
         @Req() req: AuthenticatedRequest
     ) {
         return this.aclService.getSharedFolders(req.user.id);
+    }
+
+    @Get("shared/files")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Get shared files",
+    })
+    async getSharedFiles(
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.aclService.getSharedFiles(req.user.id);
     }
 
     @Post(":id/share")
@@ -52,5 +64,18 @@ export class ACLController {
             folderId,
             req.user.id,
         );
+    }
+
+    @Post("file/:fileId/share")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Share file with another user",
+    })
+    async sharedFile(
+        @Req() req: AuthenticatedRequest,
+        @Param("fileId") fileId: string,
+        @Body() dto: ShareFileDTO,
+    ) {
+        return this.aclService.sharedFile(fileId, req.user.id, dto.targetUserId, dto.permission);
     }
 }

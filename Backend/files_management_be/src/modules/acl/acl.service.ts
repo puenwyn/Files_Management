@@ -214,6 +214,7 @@ export class ACLService {
                     tx,
                     userId,
                     folderId,
+                    ResourceType.FOLDER,
                     {
                         action: ActivityAction.SHARE,
                         metadata: {
@@ -259,6 +260,7 @@ export class ACLService {
                 tx,
                 userId,
                 folderId,
+                ResourceType.FOLDER,
                 {
                     action: ActivityAction.CHANGE_PERMISSION,
                     metadata: {
@@ -449,5 +451,217 @@ export class ACLService {
         }
 
         throw new ForbiddenException();
+    }
+
+    async sharedFile(
+        fileId: string,
+        userId: string,
+        targetUserId: string,
+        permission: PermissionType
+    ) {
+        const file = await this.prisma.file.findUnique({
+            where: { id: fileId },
+            select: {
+                id: true,
+                name: true,
+            },
+        });
+
+        if (!file) throw new NotFoundException("File is not found!");
+        const ownerACL = await this.getFilePermission(fileId, userId);
+
+        if (!ownerACL || !this.hasPermission(ownerACL.permissionType, PermissionType.SHARE)) {
+            throw new ForbiddenException(
+                "You don't have permission to share this file!",
+            );
+        }
+
+        if (userId === targetUserId) throw new BadRequestException("You can't share to yourself");
+
+        const targetUser = await this.userService.findById(targetUserId);
+        if (!targetUser) throw new NotFoundException("User is not found!");
+
+        const result = await this.prisma.$transaction(async (tx) => {
+            const userACL = await tx.aCL.findUnique({
+                where: {
+                    userId_fileId: {
+                        userId: targetUserId,
+                        fileId,
+                    },
+                },
+            });
+
+            if (!userACL) {
+                const acl = await this.createACL(tx, {
+                    userId: targetUserId,
+                    fileId,
+                    permissionType: permission,
+                });
+
+                await this.activityService.createActivity(
+                    tx,
+                    userId,
+                    fileId,
+                    ResourceType.FILE,
+                    {
+                        action: ActivityAction.SHARE,
+                        metadata: {
+                            targetUserId: targetUser.id,
+                            targetUserName: targetUser.fullName,
+                            permission,
+                        },
+                    },
+                );
+
+                const notification =
+                    await this.notificationService.createNotification(
+                        tx,
+                        targetUserId,
+                        userId,
+                        fileId,
+                        ResourceType.FILE,
+                        {
+                            type: NotificationType.SHARE,
+                            metadata: {
+                                resourceName: file.name,
+                                permission,
+                            },
+                        },
+                    );
+
+                return { acl, notification };
+            }
+
+            if (userACL.permissionType === permission) {
+                throw new ConflictException(
+                    "User has already permission for this file",
+                );
+            }
+
+            const acl = await tx.aCL.update({
+                where: {
+                    userId_fileId: {
+                        userId: targetUserId,
+                        fileId,
+                    },
+                },
+                data: {
+                    permissionType: permission,
+                },
+            });
+
+            await this.activityService.createActivity(
+                tx,
+                userId,
+                fileId,
+                ResourceType.FILE,
+                {
+                    action: ActivityAction.CHANGE_PERMISSION,
+                    metadata: {
+                        targetUserId: targetUser.id,
+                        targetUserName: targetUser.fullName,
+                        oldPermission: userACL.permissionType,
+                        newPermission: permission,
+                    },
+                },
+            );
+
+            const notification =
+                await this.notificationService.createNotification(
+                    tx,
+                    targetUserId,
+                    userId,
+                    fileId,
+                    ResourceType.FILE,
+                    {
+                        type: NotificationType.CHANGE_PERMISSION,
+                        metadata: {
+                            resourceName: file.name,
+                            oldPermission: userACL.permissionType,
+                            newPermission: permission,
+                        },
+                    },
+                );
+
+            return { acl, notification };
+        });
+
+        this.notificationService.sendRealtimeNotification(
+            targetUserId,
+            result.notification,
+        );
+
+        return result.acl;
+    }
+
+    async getSharedFiles(userId: string) {
+        const files = await this.prisma.$queryRaw<
+            {
+                id: string;
+                name: string;
+                folderId: string | null;
+                driveId: string;
+                createdAt: Date;
+                updatedAt: Date;
+                permissionType: PermissionType;
+                ownerId: string;
+                ownerFullName: string;
+            }[]
+        >`
+        SELECT 
+            f.id,
+            f.name,
+            f."folderId",
+            f."driveId",
+            f."createdAt",
+            f."updatedAt",
+            shared_acl."permissionType",
+            owner_acl."userId" AS "ownerId",
+            owner."fullName" AS "ownerFullName"
+
+        FROM "ACL" shared_acl
+
+        INNER JOIN "File" f
+            ON f.id = shared_acl."fileId"
+
+        -- Lấy ACL của owner file
+        INNER JOIN "ACL" owner_acl
+            ON owner_acl."fileId" = f.id
+            AND owner_acl."isOwner" = true
+
+        INNER JOIN "User" owner
+            ON owner.id = owner_acl."userId"
+
+        WHERE
+            shared_acl."userId" = ${userId}
+            AND shared_acl."isOwner" = false
+
+            -- Không hiển thị file nếu folder cha được share trực tiếp
+            AND NOT EXISTS (
+                SELECT 1
+                FROM "ACL" parent_acl
+                WHERE
+                    parent_acl."folderId" = f."folderId"
+                    AND parent_acl."userId" = ${userId}
+                    AND parent_acl."isOwner" = false
+            )
+
+        ORDER BY f."createdAt" DESC
+    `;
+
+        return files.map((file) => ({
+            id: file.id,
+            name: file.name,
+            folderId: file.folderId,
+            driveId: file.driveId,
+            createdAt: file.createdAt,
+            updatedAt: file.updatedAt,
+            owner: {
+                id: file.ownerId,
+                fullName: file.ownerFullName,
+            },
+            permissionType: file.permissionType,
+            resourceType: ResourceType.FILE,
+        }));
     }
 }
