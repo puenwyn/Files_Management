@@ -7,6 +7,7 @@ import { PermissionType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CompleteFileUploadDTO } from './dtos/complete-file-upload.dto';
 import { CreateFileUploadDTO } from './dtos/create-file-upload.dto';
+import { FileDetailResponseDTO } from './dtos/file-detail-response.dto';
 
 @Injectable()
 export class FileService {
@@ -359,4 +360,74 @@ export class FileService {
         });
     }
 
+    async getFileDetail(userId: string, fileId: string): Promise<FileDetailResponseDTO> {
+        await this.aclService.checkFilePermission(
+            fileId,
+            userId,
+            PermissionType.VIEW,
+        );
+
+        const file = await this.prisma.file.findUnique({
+            where: {
+                id: fileId,
+            },
+            include: {
+                acls: {
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+                latestVersion: true,
+            },
+        });
+
+        if (!file) {
+            throw new NotFoundException("File not found");
+        }
+
+        const owner = file.acls.find((acl) => acl.isOwner);
+
+        if (!owner) {
+            throw new NotFoundException("File owner not found");
+        }
+
+        const latestVersion = file.latestVersion;
+
+        return {
+            id: file.id,
+            name: file.name,
+            extension: file.extension,
+            mimeType: latestVersion?.mimeType ?? "",
+            size: latestVersion?.size.toString() ?? "0",
+            driveId: file.driveId,
+            folderId: file.folderId,
+            status: file.status,
+            previewUrl: null,
+            createdAt: file.createdAt,
+            updatedAt: file.updatedAt,
+            accessedAt: file.accessedAt,
+            owner: {
+                id: owner.user.id,
+                fullName: owner.user.fullName,
+                permissionType: owner.permissionType,
+                isOwner: true,
+            },
+            users: file.acls
+                .filter((acl) => !acl.isOwner)
+                .map((acl) => ({
+                    id: acl.user.id,
+                    fullName: acl.user.fullName,
+                    permissionType: acl.permissionType,
+                    isOwner: false,
+                })),
+        };
+    }
 }

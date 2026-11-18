@@ -1,6 +1,7 @@
 import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
+import { FileDetailResponse, fileDetailResponseSchema } from "@/schemas/file/file-detail-response.schema";
 import { FileListResponse, fileListResponseSchema } from "@/schemas/file/file-response.schema";
 import { completeFileUploadResponseSchema, uploadResponseSchema } from "@/schemas/file/upload-file.schema";
 import { CompleteFileUploadResponse, CreateFileUploadPayload, UploadResponse } from "@/types/file-upload.type";
@@ -122,6 +123,27 @@ export const fileService = {
                 }
                 if (responseData.error?.code === ErrorCode.FORBIDDEN) {
                     throw new Error("You don't have permission to access this folder");
+                }
+            }
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    getFileDetail: async (fileId: string): Promise<FileDetailResponse> => {
+        try {
+            const response = await axiosClient.get(`/file/${fileId}`);
+            const result = createApiResponseSchema(fileDetailResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData?.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("File not found");
+                }
+                if (responseData?.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error(
+                        "You don't have permission to access this file"
+                    );
                 }
             }
             throw new Error("Can't connect to server");

@@ -401,4 +401,53 @@ export class ACLService {
         }));
     }
 
+
+    async getFilePermission(fileId: string, userId: string) {
+        return this.prisma.aCL.findFirst({
+            where: { fileId, userId },
+        });
+    }
+
+    async checkFilePermission(
+        fileId: string,
+        userId: string,
+        requiredPermission: PermissionType,
+    ) {
+        const file = await this.prisma.file.findUnique({
+            where: { id: fileId },
+            select: {
+                id: true,
+                folderId: true,
+            },
+        });
+
+        if (!file) throw new NotFoundException('File not found');
+
+        const fileACL = await this.getFilePermission(fileId, userId);
+
+        if (fileACL) {
+            if (!this.hasPermission(fileACL.permissionType, requiredPermission)) {
+                throw new ForbiddenException();
+            }
+
+            return fileACL;
+        }
+
+        // Nếu không có ACL file, kiểm tra folder chứa trực tiếp
+        if (file.folderId) {
+            const folderACL = await this.getFolderPermission(
+                file.folderId,
+                userId,
+            );
+
+            if (
+                folderACL &&
+                requiredPermission === PermissionType.VIEW
+            ) {
+                return folderACL;
+            }
+        }
+
+        throw new ForbiddenException();
+    }
 }

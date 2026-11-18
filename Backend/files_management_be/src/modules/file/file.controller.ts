@@ -45,4 +45,13 @@ export class FileController {
     ) {
         return this.fileService.getFolderFiles(req.user.id, folderId);
     }
+
+    @Get(":id")
+    @UseGuards(JwtAuthGuard)
+    async getFileDetail(
+        @Param("id") fileId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.fileService.getFileDetail(req.user.id, fileId);
+    }
 }
