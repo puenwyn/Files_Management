@@ -2,6 +2,7 @@ import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
 import { FileDetailResponse, fileDetailResponseSchema } from "@/schemas/file/file-detail-response.schema";
+import { FilePreviewResponse, filePreviewResponseSchema } from "@/schemas/file/file-preview-response.schema";
 import { FileListResponse, fileListResponseSchema } from "@/schemas/file/file-response.schema";
 import { completeFileUploadResponseSchema, uploadResponseSchema } from "@/schemas/file/upload-file.schema";
 import { CompleteFileUploadResponse, CreateFileUploadPayload, UploadResponse } from "@/types/file-upload.type";
@@ -146,6 +147,38 @@ export const fileService = {
                     );
                 }
             }
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    getFilePreview: async (
+        fileId: string,
+    ): Promise<FilePreviewResponse> => {
+        try {
+            const response = await axiosClient.get(
+                `/file/${fileId}/preview`,
+            );
+
+            const result = createApiResponseSchema(
+                filePreviewResponseSchema,
+            ).parse(response.data);
+
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+
+                if (responseData?.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("File not found");
+                }
+
+                if (responseData?.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error(
+                        "You don't have permission to preview this file",
+                    );
+                }
+            }
+
             throw new Error("Can't connect to server");
         }
     },

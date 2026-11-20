@@ -430,4 +430,58 @@ export class FileService {
                 })),
         };
     }
+
+    async getFilePreview(userId: string, fileId: string) {
+        // 1. Kiểm tra quyền xem file
+        await this.aclService.checkFilePermission(
+            fileId,
+            userId,
+            PermissionType.VIEW,
+        );
+
+        // 2. Lấy thông tin file, phiên bản mới nhất và blob
+        const file = await this.prisma.file.findUnique({
+            where: {
+                id: fileId,
+            },
+            include: {
+                latestVersion: {
+                    include: {
+                        blob: true,
+                    },
+                },
+            },
+        });
+
+        if (!file) {
+            throw new NotFoundException("File not found!");
+        }
+
+        const latestVersion = file.latestVersion;
+
+        if (!latestVersion || !latestVersion.isUploaded) {
+            throw new NotFoundException("File has not been uploaded!");
+        }
+
+        // 3. Không preview file đã mã hóa
+        if (latestVersion.encrypt) {
+            throw new BadRequestException(
+                "Encrypted files cannot be previewed!",
+            );
+        }
+
+        // 4. Tạo URL xem file từ MinIO
+        const preview = await this.storageService.generatePreviewURL(
+            latestVersion.blob.relPath,
+        );
+
+        return {
+            fileId: file.id,
+            name: file.name,
+            extension: file.extension,
+            mimeType: latestVersion.mimeType,
+            url: preview.url,
+            expiresIn: preview.expiresIn,
+        };
+    }
 }

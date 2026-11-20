@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { HeadBucketCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadBucketCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AppConfigService } from "src/config/app_config.service";
 
@@ -95,5 +95,25 @@ export class StorageService {
                 contentType: null,
             };
         }
+    }
+
+    async generatePreviewURL(objectKey: string) {
+        const command = new GetObjectCommand({
+            Bucket: this.configService.MINIO_BUCKET,
+            Key: objectKey,
+        });
+
+        const url = await getSignedUrl(
+            this.s3Client,
+            command,
+            {
+                expiresIn: 300,
+            },
+        );
+
+        return {
+            url,
+            expiresIn: 300,
+        };
     }
 }

@@ -54,4 +54,16 @@ export class FileController {
     ) {
         return this.fileService.getFileDetail(req.user.id, fileId);
     }
+
+    @Get(":id/preview")
+    @UseGuards(JwtAuthGuard)
+    async getFilePreview(
+        @Param("id") fileId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.fileService.getFilePreview(
+            req.user.id,
+            fileId,
+        );
+    }
 }

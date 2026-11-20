@@ -1,9 +1,16 @@
-"use client"
-import { ResourceType } from "@/types/resource.type"
-import ResourceDetailInfoItem from "./resource-detail-info-item"
-import ResourceSection from "../resource-section"
-import ResourceDetailAccess from "./resource-detail-access"
+
+"use client";
+
+import { ResourceType } from "@/types/resource.type";
+
 import { useGetFolderDetail } from "@/hooks/folder/useGetFolderDetail.hook";
+import { useGetFileDetail } from "@/hooks/file/useGetFileDetail.hook";
+import { useGetFilePreview } from "@/hooks/file/useGetFilePreview.hook";
+
+import ResourceSection from "../resource-section";
+import ResourceDetailInfoItem from "./resource-detail-info-item";
+import ResourceDetailAccess from "./resource-detail-access";
+import ResourceDetailPreview from "./resource-detail-preview";
 
 interface ResourceDetailProps {
     resource: ResourceType | null;
@@ -12,50 +19,108 @@ interface ResourceDetailProps {
 
 export default function ResourceDetail({
     resource,
-    resourceId
+    resourceId,
 }: ResourceDetailProps) {
+    const isFolder = resource === ResourceType.FOLDER;
+    const isFile = resource === ResourceType.FILE;
 
-    const { data, isLoading } = useGetFolderDetail(resourceId ?? "");
+    const folderQuery = useGetFolderDetail(
+        isFolder ? resourceId ?? "" : ""
+    );
 
-    if (isLoading) {
+    const fileQuery = useGetFileDetail(
+        isFile ? resourceId ?? "" : ""
+    );
+
+    const previewQuery = useGetFilePreview(
+        isFile ? resourceId ?? "" : ""
+    );
+
+    if (!resource || !resourceId) return null;
+
+    if (isFolder && folderQuery.isLoading) {
         return <div>Loading...</div>;
     }
 
-    if (!data) {
-        return null;
+    if (isFile && fileQuery.isLoading) {
+        return <div>Loading...</div>;
     }
 
-    return (
-        <div className="">
-            <ResourceSection title={`${resource === ResourceType.FOLDER ? "Folder" : "File"} detail`}>
-                {resource === ResourceType.FILE && (
+    // Folder detail
+    if (isFolder) {
+        const folder = folderQuery.data;
+
+        if (!folder) return null;
+
+        return (
+            <div>
+                <ResourceSection title="Folder detail">
+                    <ResourceDetailInfoItem
+                        title="Owner"
+                        content={folder.owner.fullName}
+                    />
+
+                    <ResourceDetailInfoItem
+                        title="Modified"
+                        content={folder.updatedAt.toLocaleString()}
+                    />
+
+                    <ResourceDetailInfoItem
+                        title="Created"
+                        content={folder.createdAt.toLocaleString()}
+                    />
+                </ResourceSection>
+
+                <ResourceDetailAccess
+                    owner={folder.owner}
+                    users={folder.users}
+                />
+            </div>
+        );
+    }
+
+    // File detail
+    if (isFile) {
+        const file = fileQuery.data;
+
+        if (!file) return null;
+
+        return (
+            <div>
+                <ResourceDetailPreview
+                    extension={file.extension}
+                    previewUrl={previewQuery.data?.url}
+                />
+
+                <ResourceSection title="File detail">
                     <ResourceDetailInfoItem
                         title="Type"
-                        content="Video"
+                        content={file.mimeType || file.extension}
                     />
-                )}
-                <ResourceDetailInfoItem
-                    title="Type"
-                    content="Video"
-                />
-                <ResourceDetailInfoItem
-                    title="Owner"
-                    content={data.owner.fullName}
-                />
-                <ResourceDetailInfoItem
-                    title="Modified"
-                    content={data.updatedAt}
-                />
-                <ResourceDetailInfoItem
-                    title="Created"
-                    content={data.createdAt}
-                />
-            </ResourceSection>
 
-            <ResourceDetailAccess
-                owner={data.owner}
-                users={data.users}
-            />
-        </div>
-    )
+                    <ResourceDetailInfoItem
+                        title="Owner"
+                        content={file.owner.fullName}
+                    />
+
+                    <ResourceDetailInfoItem
+                        title="Modified"
+                        content={file.updatedAt.toLocaleString()}
+                    />
+
+                    <ResourceDetailInfoItem
+                        title="Created"
+                        content={file.createdAt.toLocaleString()}
+                    />
+                </ResourceSection>
+
+                <ResourceDetailAccess
+                    owner={file.owner}
+                    users={file.users}
+                />
+            </div>
+        );
+    }
+
+    return null;
 }

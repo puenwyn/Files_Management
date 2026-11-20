@@ -1,4 +1,5 @@
 
+import { PermissionType } from "@/constants/permission-type";
 import { z } from "zod";
 
 // ==================== ENUMS ====================
@@ -7,12 +8,6 @@ export const fileStatusSchema = z.enum([
     "READ_ONLY",
     "HIDDEN",
     "MODIFY",
-]);
-
-export const permissionTypeSchema = z.enum([
-    "VIEW",
-    "EDIT",
-    "SHARE",
 ]);
 
 export const scanStatusSchema = z.enum([
@@ -50,7 +45,7 @@ export const fileResponseSchema = z.object({
     createdAt: z.string(),
     updatedAt: z.string(),
     accessedAt: z.string().nullable(),
-    permissionType: permissionTypeSchema.nullable(),
+    permissionType: z.enum(PermissionType),
     isOwner: z.boolean(),
     isAccessed: z.boolean(),
 });
@@ -60,7 +55,6 @@ export const fileListResponseSchema = z.array(
 );
 
 export type FileStatus = z.infer<typeof fileStatusSchema>;
-export type FilePermissionType = z.infer<typeof permissionTypeSchema>;
 export type ScanStatus = z.infer<typeof scanStatusSchema>;
 export type FileVersionResponse = z.infer<typeof fileVersionResponseSchema>;
 export type FileResponse = z.infer<typeof fileResponseSchema>;

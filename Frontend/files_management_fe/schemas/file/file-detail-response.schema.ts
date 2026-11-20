@@ -1,9 +1,10 @@
+import { PermissionType } from "@/constants/permission-type";
 import { z } from "zod";
 
 const resourceDetailUserSchema = z.object({
     id: z.string(),
     fullName: z.string(),
-    permissionType: z.enum(["VIEW", "EDIT", "SHARE"]),
+    permissionType: z.enum(PermissionType),
     isOwner: z.boolean(),
 });
 
