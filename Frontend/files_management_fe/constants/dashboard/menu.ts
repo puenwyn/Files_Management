@@ -4,7 +4,7 @@ import { ActionType } from "../action-type";
 export type MenuItem = {
     icon?: LucideIcon;
     label: string;
-    action: string;
+    action: ActionType;
     separator?: boolean;
     destructive?: boolean;
     disabled?: boolean;
@@ -12,12 +12,8 @@ export type MenuItem = {
     subMenu?: MenuItem[];
 };
 
-export const toolMenuItems: MenuItem[] = [
-    {
-        icon: ArrowDownToLine,
-        label: "Download",
-        action: ActionType.DOWNLOAD,
-    },
+
+export const folderMenuItems: MenuItem[] = [
     {
         icon: PenLine,
         label: "Rename",
@@ -26,7 +22,7 @@ export const toolMenuItems: MenuItem[] = [
     {
         icon: EyeClosed,
         label: "Hide",
-        action: ActionType.HIDE
+        action: ActionType.HIDE,
     },
     {
         icon: Star,
@@ -38,7 +34,6 @@ export const toolMenuItems: MenuItem[] = [
         label: "Share",
         action: ActionType.SHARE,
         separator: true,
-
         subMenu: [
             {
                 icon: Link2,
@@ -64,6 +59,54 @@ export const toolMenuItems: MenuItem[] = [
         destructive: true,
     },
 ];
+
+export const fileMenuItems: MenuItem[] = [
+    {
+        icon: ArrowDownToLine,
+        label: "Download",
+        action: ActionType.DOWNLOAD,
+    },
+    {
+        icon: PenLine,
+        label: "Rename",
+        action: ActionType.RENAME,
+    },
+    {
+        icon: Star,
+        label: "Add to Starred",
+        action: ActionType.STARRED,
+    },
+    {
+        icon: ExternalLink,
+        label: "Share",
+        action: ActionType.SHARE,
+        separator: true,
+        subMenu: [
+            {
+                icon: Link2,
+                label: "Share Link",
+                action: ActionType.SHARE_LINK,
+            },
+            {
+                label: "Manage Access",
+                action: ActionType.MANAGE_ACCESS,
+            },
+        ],
+    },
+    {
+        icon: Info,
+        label: "Information",
+        action: ActionType.INFORMATION,
+    },
+    {
+        icon: Trash2,
+        label: "Delete",
+        action: ActionType.DELETE,
+        separator: true,
+        destructive: true,
+    },
+];
+
 
 export const bgroundMenuItems: MenuItem[] = [
     {

@@ -3,11 +3,14 @@ import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { DriveService } from '../drive/drive.service';
 import { FolderService } from '../folder/folder.service';
 import { ACLService } from '../acl/acl.service';
-import { PermissionType } from '@prisma/client';
+import { ActivityAction, NotificationType, PermissionType, ResourceType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CompleteFileUploadDTO } from './dtos/complete-file-upload.dto';
 import { CreateFileUploadDTO } from './dtos/create-file-upload.dto';
 import { FileDetailResponseDTO } from './dtos/file-detail-response.dto';
+import { FileResponseDTO } from './dtos/file-response.dto';
+import { ActivityService } from '../activity/activity.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class FileService {
@@ -16,7 +19,9 @@ export class FileService {
         private readonly storageService: StorageService,
         private readonly driveService: DriveService,
         private readonly folderService: FolderService,
-        private readonly aclService: ACLService
+        private readonly aclService: ACLService,
+        private readonly activityService: ActivityService,
+        private readonly notificationService: NotificationService
     ) { }
 
     async createUpload(userId: string, dto: CreateFileUploadDTO) {
@@ -482,6 +487,145 @@ export class FileService {
             mimeType: latestVersion.mimeType,
             url: preview.url,
             expiresIn: preview.expiresIn,
+        };
+    }
+
+    async renameFile(userId: string, fileId: string, newName: string): Promise<FileResponseDTO> {
+        await this.aclService.checkFilePermission(fileId, userId, PermissionType.EDIT);
+
+        const oldFile = await this.prisma.file.findUnique({
+            where: { id: fileId },
+        });
+
+        if (!oldFile) {
+            throw new NotFoundException("File is not found!");
+        }
+
+        const trimmedName = newName.trim();
+
+        if (!trimmedName) {
+            throw new BadRequestException("File name cannot be empty!");
+        }
+
+        const result = await this.prisma.$transaction(async (tx) => {
+            const existingFiles = await tx.file.findMany({
+                where: {
+                    driveId: oldFile.driveId,
+                    folderId: oldFile.folderId,
+                    extension: oldFile.extension,
+                    id: { not: fileId },
+                },
+                select: { name: true },
+            });
+
+            const existingNames = new Set(
+                existingFiles.map((file) => file.name),
+            );
+
+            let finalName = trimmedName;
+
+            for (let counter = 1; existingNames.has(finalName); counter++) {
+                finalName = `${trimmedName} (${counter})`;
+            }
+
+            const file = await tx.file.update({
+                where: { id: fileId },
+                data: { name: finalName },
+            });
+
+            await this.activityService.createActivity(
+                tx,
+                userId,
+                fileId,
+                ResourceType.FILE,
+                {
+                    action: ActivityAction.RENAME,
+                    metadata: {
+                        oldName: oldFile.name,
+                        newName: finalName,
+                    },
+                },
+            );
+
+            const ownerACL = await tx.aCL.findFirst({
+                where: { fileId, isOwner: true },
+                select: { userId: true },
+            });
+
+            const notification =
+                ownerACL && ownerACL.userId !== userId
+                    ? await this.notificationService.createNotification(
+                        tx,
+                        ownerACL.userId,
+                        userId,
+                        fileId,
+                        ResourceType.FILE,
+                        {
+                            type: NotificationType.RENAME,
+                            metadata: {
+                                resourceName: finalName,
+                                oldName: oldFile.name,
+                            },
+                        },
+                    )
+                    : undefined;
+
+            return {
+                file,
+                notification,
+                ownerId: ownerACL?.userId,
+            };
+        });
+
+        if (result.notification && result.ownerId) {
+            this.notificationService.sendRealtimeNotification(
+                result.ownerId,
+                result.notification,
+            );
+        }
+
+        const file = await this.prisma.file.findUnique({
+            where: { id: fileId },
+            include: {
+                acls: {
+                    where: { isOwner: true },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!file) {
+            throw new NotFoundException("File is not found!");
+        }
+
+        const owner = file.acls[0];
+
+        if (!owner) {
+            throw new NotFoundException("File owner not found!");
+        }
+
+        return {
+            id: file.id,
+            name: file.name,
+            extension: file.extension,
+            driveId: file.driveId,
+            folderId: file.folderId,
+            status: file.status,
+            size: file.size.toString(),
+            createdAt: file.createdAt,
+            updatedAt: file.updatedAt,
+            owner: {
+                id: owner.user.id,
+                fullName: owner.user.fullName,
+            },
+            permissionType: owner.permissionType,
         };
     }
 }

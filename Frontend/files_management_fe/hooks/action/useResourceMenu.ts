@@ -1,14 +1,15 @@
+
 import { ActionType } from "@/constants/action-type";
-import { MenuItem, toolMenuItems } from "@/constants/dashboard/menu";
-import { useState } from "react";
-import { useDeleteFolder } from "../folder/useDeleteFolder.hook";
 import { PermissionType } from "@/constants/permission-type";
 import { ResourceType } from "@/types/resource.type";
-import { useResourceDetailStore } from "@/stores/resource-detail.store";
-import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
+import { fileMenuItems, folderMenuItems, MenuItem } from "@/constants/dashboard/menu";
+import { useState } from "react";
 import { Star, StarOff } from "lucide-react";
+import { useDeleteFolder } from "../folder/useDeleteFolder.hook";
 import { useAddStarred } from "../starred/useAddStarred.hook";
 import { useRemoveStarred } from "../starred/useRemoveStarred.hook";
+import { useResourceDetailStore } from "@/stores/resource-detail.store";
+import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
 
 export function useResourceMenu(
     resourceId: string,
@@ -18,12 +19,14 @@ export function useResourceMenu(
     permissionType?: PermissionType | null,
     isStarred: boolean = false
 ) {
-
     const [renameOpen, setRenameOpen] = useState(false);
     const [hideOpen, setHideOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
 
-    const canEdit = permissionType === PermissionType.EDIT || permissionType === PermissionType.SHARE;
+    const canEdit =
+        permissionType === PermissionType.EDIT ||
+        permissionType === PermissionType.SHARE;
+
     const canShare = permissionType === PermissionType.SHARE;
 
     const openResource = useResourceDetailStore(
@@ -39,7 +42,7 @@ export function useResourceMenu(
         isLoading: isDeleteLoading,
         isError: isDeleteError,
         error: errorLoading,
-        isSuccess: isDeleteSuccess
+        isSuccess: isDeleteSuccess,
     } = useDeleteFolder(resourceId, driveId, parentFolderId);
 
     const { addStarredMutation } = useAddStarred(
@@ -52,11 +55,12 @@ export function useResourceMenu(
         resourceType
     );
 
+    const isFolder = resourceType === ResourceType.FOLDER;
+    const isFile = resourceType === ResourceType.FILE;
+
     const handleMenuItems = (items: MenuItem[]): MenuItem[] => {
         return items.map((item) => {
-            const newItem = {
-                ...item,
-            };
+            const newItem = { ...item };
 
             if (item.subMenu) {
                 newItem.subMenu = handleMenuItems(item.subMenu);
@@ -67,7 +71,7 @@ export function useResourceMenu(
                     return {
                         ...newItem,
                         onClick: () => {
-                            console.log("Download");
+                            console.log("DOWNLOAD:", resourceType, resourceId);
                         },
                     };
 
@@ -88,7 +92,7 @@ export function useResourceMenu(
                     return {
                         ...newItem,
                         onClick: () => {
-                            console.log("Share link");
+                            console.log("SHARE LINK:", resourceType, resourceId);
                         },
                     };
 
@@ -96,7 +100,7 @@ export function useResourceMenu(
                     return {
                         ...newItem,
                         disabled: !canShare,
-                        onClick: () => setShareOpen(!shareOpen),
+                        onClick: () => setShareOpen(true),
                     };
 
                 case ActionType.INFORMATION:
@@ -108,17 +112,23 @@ export function useResourceMenu(
                 case ActionType.DELETE:
                     return {
                         ...newItem,
-                        onClick: () =>
-                            openConfirm({
-                                title: "Delete resource?",
-                                description: "Are you sure you want to delete this resource?",
-                                confirmText: "Delete",
-                                cancelText: "Cancel",
-                                destructive: true,
-                                onConfirm: () => {
-                                    deleteFolderMutation.mutate();
-                                },
-                            }),
+                        onClick: () => {
+                            if (isFolder) {
+                                openConfirm({
+                                    title: "Delete resource?",
+                                    description:
+                                        "Are you sure you want to delete this resource?",
+                                    confirmText: "Delete",
+                                    cancelText: "Cancel",
+                                    destructive: true,
+                                    onConfirm: () => {
+                                        deleteFolderMutation.mutate();
+                                    },
+                                });
+                            } else {
+                                console.log("DELETE FILE:", resourceId);
+                            }
+                        },
                     };
 
                 case ActionType.STARRED:
@@ -129,13 +139,9 @@ export function useResourceMenu(
                             ? "Remove from Starred"
                             : "Add to Starred",
                         onClick: () => {
-                            console.log("CLICK STARRED");
-
                             if (isStarred) {
-                                console.log("REMOVE");
                                 removeStarredMutation.mutate();
                             } else {
-                                console.log("ADD");
                                 addStarredMutation.mutate();
                             }
                         },
@@ -147,7 +153,11 @@ export function useResourceMenu(
         });
     };
 
-    const items = handleMenuItems(toolMenuItems);
+    const menuConfig = isFolder
+        ? folderMenuItems
+        : fileMenuItems;
+
+    const items = handleMenuItems(menuConfig);
 
     return {
         items,
@@ -161,5 +171,5 @@ export function useResourceMenu(
         isDeleteError,
         errorLoading,
         isDeleteSuccess,
-    }
+    };
 }
