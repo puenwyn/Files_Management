@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { ACLService } from "./acl.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ShareFolderDTO } from "./dtos/share-folder.dto";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { ShareFileDTO } from "./dtos/share-file.dto";
+import { ResourceType } from "@prisma/client";
 
 @Controller("acl")
 export class ACLController {
@@ -77,5 +78,35 @@ export class ACLController {
         @Body() dto: ShareFileDTO,
     ) {
         return this.aclService.sharedFile(fileId, req.user.id, dto.targetUserId, dto.permission);
+    }
+
+    @Delete("folders/:folderId/:targetUserId")
+    @UseGuards(JwtAuthGuard)
+    async removeFolderAccess(
+        @Req() req: AuthenticatedRequest,
+        @Param("folderId") folderId: string,
+        @Param("targetUserId") targetUserId: string,
+    ) {
+        return this.aclService.removeSharedAccess(
+            folderId,
+            ResourceType.FOLDER,
+            req.user.id,
+            targetUserId,
+        );
+    }
+
+    @Delete("files/:fileId/:targetUserId")
+    @UseGuards(JwtAuthGuard)
+    async removeFileAccess(
+        @Req() req: AuthenticatedRequest,
+        @Param("fileId") fileId: string,
+        @Param("targetUserId") targetUserId: string,
+    ) {
+        return this.aclService.removeSharedAccess(
+            fileId,
+            ResourceType.FILE,
+            req.user.id,
+            targetUserId,
+        );
     }
 }

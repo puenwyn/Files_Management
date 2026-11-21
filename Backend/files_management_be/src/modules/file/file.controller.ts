@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
 import { FileService } from "./file.service";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -76,5 +76,23 @@ export class FileController {
         @Body() dto: RenameFileDTO,
     ) {
         return this.fileService.renameFile(req.user.id, fileId, dto.newName);
+    }
+
+    @Delete(":fileId/delete")
+    @UseGuards(JwtAuthGuard)
+    deleteFile(
+        @Req() req: AuthenticatedRequest,
+        @Param("fileId") fileId: string,
+    ) {
+        return this.fileService.deleteFile(req.user.id, fileId);
+    }
+
+    @Patch(":fileId/restore")
+    @UseGuards(JwtAuthGuard)
+    restoreFile(
+        @Req() req: AuthenticatedRequest,
+        @Param("fileId") fileId: string,
+    ) {
+        return this.fileService.restoreFile(req.user.id, fileId);
     }
 }

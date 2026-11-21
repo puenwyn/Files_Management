@@ -628,4 +628,144 @@ export class FileService {
             permissionType: owner.permissionType,
         };
     }
+
+    async deleteFile(
+        userId: string,
+        fileId: string
+    ): Promise<FileResponseDTO> {
+        await this.aclService.checkFilePermission(
+            fileId,
+            userId,
+            PermissionType.EDIT
+        );
+
+        const file = await this.prisma.file.update({
+            where: { id: fileId },
+            data: {
+                isDeleted: true,
+            },
+            include: {
+                acls: {
+                    where: { isOwner: true },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        const owner = file.acls[0];
+
+        if (!owner) {
+            throw new NotFoundException("File owner not found!");
+        }
+
+        return {
+            id: file.id,
+            name: file.name,
+            extension: file.extension,
+            driveId: file.driveId,
+            folderId: file.folderId,
+            status: file.status,
+            size: file.size.toString(),
+            createdAt: file.createdAt,
+            updatedAt: file.updatedAt,
+            owner: {
+                id: owner.user.id,
+                fullName: owner.user.fullName,
+            },
+            permissionType: owner.permissionType,
+        };
+    }
+
+    async restoreFile(
+        userId: string,
+        fileId: string,
+    ): Promise<FileResponseDTO> {
+        const file = await this.prisma.file.findUnique({
+            where: { id: fileId },
+            include: {
+                acls: {
+                    where: { isOwner: true },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!file) {
+            throw new NotFoundException("File not found!");
+        }
+
+        const owner = file.acls[0];
+
+        if (!owner || owner.user.id !== userId) {
+            throw new ForbiddenException(
+                "You do not have permission to restore this file!",
+            );
+        }
+
+        if (!file.isDeleted) {
+            throw new BadRequestException("File is not deleted!");
+        }
+
+        // Kiểm tra folder cha nếu file nằm trong folder
+        if (file.folderId) {
+            await this.folderService.checkFolderAccess(
+                file.folderId,
+                userId,
+                PermissionType.EDIT,
+            );
+        }
+
+        const restoredFile = await this.prisma.file.update({
+            where: { id: fileId },
+            data: {
+                isDeleted: false,
+            },
+            include: {
+                acls: {
+                    where: { isOwner: true },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        const restoredOwner = restoredFile.acls[0];
+
+        return {
+            id: restoredFile.id,
+            name: restoredFile.name,
+            extension: restoredFile.extension,
+            driveId: restoredFile.driveId,
+            folderId: restoredFile.folderId,
+            status: restoredFile.status,
+            size: restoredFile.size.toString(),
+            createdAt: restoredFile.createdAt,
+            updatedAt: restoredFile.updatedAt,
+            owner: {
+                id: restoredOwner.user.id,
+                fullName: restoredOwner.user.fullName,
+            },
+            permissionType: restoredOwner.permissionType,
+        };
+    }
 }

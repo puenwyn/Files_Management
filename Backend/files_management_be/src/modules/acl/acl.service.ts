@@ -664,4 +664,66 @@ export class ACLService {
             resourceType: ResourceType.FILE,
         }));
     }
+
+    async removeSharedAccess(
+        resourceId: string,
+        resourceType: ResourceType,
+        userId: string,
+        targetUserId: string,
+    ) {
+        if (userId === targetUserId) {
+            throw new BadRequestException(
+                "You cannot remove your own access!",
+            );
+        }
+
+        const acl = await this.prisma.aCL.findFirst({
+            where: {
+                userId: targetUserId,
+                ...(resourceType === ResourceType.FOLDER
+                    ? { folderId: resourceId }
+                    : { fileId: resourceId }),
+                isOwner: false,
+            },
+        });
+
+        if (!acl) {
+            throw new NotFoundException("Shared access not found!");
+        }
+
+        if (resourceType === ResourceType.FOLDER) {
+            await this.checkPermisison(
+                resourceId,
+                userId,
+                PermissionType.SHARE,
+            );
+        } else {
+            const ownerACL = await this.getFilePermission(
+                resourceId,
+                userId,
+            );
+
+            if (
+                !ownerACL ||
+                !this.hasPermission(
+                    ownerACL.permissionType,
+                    PermissionType.SHARE,
+                )
+            ) {
+                throw new ForbiddenException(
+                    "You don't have permission to remove access!",
+                );
+            }
+        }
+
+        await this.prisma.aCL.delete({
+            where: {
+                id: acl.id,
+            },
+        });
+
+        return {
+            message: "Access removed successfully!",
+        };
+    }
 }

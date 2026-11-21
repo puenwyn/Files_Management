@@ -222,6 +222,7 @@ model File {
   status          FileStatus @default(MODIFY)
   size            BigInt
   latestVersionId String?    @unique
+  isDeleted       Boolean    @default(false)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   accessedAt      DateTime?
