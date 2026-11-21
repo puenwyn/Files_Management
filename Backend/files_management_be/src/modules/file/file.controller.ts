@@ -47,6 +47,12 @@ export class FileController {
         return this.fileService.getFolderFiles(req.user.id, folderId);
     }
 
+    @Get("trash")
+    @UseGuards(JwtAuthGuard)
+    getTrash(@Req() req: AuthenticatedRequest) {
+        return this.fileService.getTrash(req.user.id);
+    }
+
     @Get(":id")
     @UseGuards(JwtAuthGuard)
     async getFileDetail(

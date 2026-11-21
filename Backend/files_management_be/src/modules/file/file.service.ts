@@ -768,4 +768,59 @@ export class FileService {
             permissionType: restoredOwner.permissionType,
         };
     }
+
+    async getTrash(userId: string): Promise<FileResponseDTO[]> {
+        const files = await this.prisma.file.findMany({
+            where: {
+                isDeleted: true,
+                drive: {
+                    userId,
+                    isDeleted: false,
+                },
+            },
+            orderBy: {
+                updatedAt: "desc",
+            },
+            include: {
+                acls: {
+                    where: {
+                        isOwner: true,
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        return files.map((file) => {
+            const owner = file.acls[0];
+
+            if (!owner) {
+                throw new NotFoundException("File owner not found!");
+            }
+
+            return {
+                id: file.id,
+                name: file.name,
+                extension: file.extension,
+                driveId: file.driveId,
+                folderId: file.folderId,
+                status: file.status,
+                size: file.size.toString(),
+                createdAt: file.createdAt,
+                updatedAt: file.updatedAt,
+                owner: {
+                    id: owner.user.id,
+                    fullName: owner.user.fullName,
+                },
+                permissionType: owner.permissionType,
+            };
+        });
+    }
 }

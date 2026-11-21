@@ -1,6 +1,7 @@
 import { ErrorCode } from "@/constants/error-code";
 import axiosClient from "@/lib/axios/axios";
 import { createApiResponseSchema } from "@/schemas/api-response.schema";
+import { CommonResponse, commonResponseSchema } from "@/schemas/common/common-response.schema";
 import { FileDetailResponse, fileDetailResponseSchema } from "@/schemas/file/file-detail-response.schema";
 import { FilePreviewResponse, filePreviewResponseSchema } from "@/schemas/file/file-preview-response.schema";
 import { FileListResponse, fileListResponseSchema } from "@/schemas/file/file-response.schema";
@@ -202,6 +203,51 @@ export const fileService = {
                 }
             }
 
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    deleteFile: async (fileId: string): Promise<CommonResponse> => {
+        try {
+            const response = await axiosClient.delete(`/file/${fileId}`);
+            const result = createApiResponseSchema(commonResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData?.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("File not found");
+                }
+                if (responseData?.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error("You don't have permission to delete this file");
+                }
+            }
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    restoreFile: async (fileId: string): Promise<CommonResponse> => {
+        try {
+            const response = await axiosClient.patch(
+                `/file/${fileId}/restore`
+            );
+            const result = createApiResponseSchema(commonResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+                if (responseData?.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("File not found");
+                }
+                if (responseData?.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error("You don't have permission to restore this file");
+                }
+                if (responseData?.error?.code === ErrorCode.BAD_REQUEST) {
+                    throw new Error(
+                        responseData?.error?.message ?? "Cannot restore this file"
+                    );
+                }
+            }
             throw new Error("Can't connect to server");
         }
     },
