@@ -16,7 +16,8 @@ import { EllipsisVertical, File } from "lucide-react";
 interface FileItemProps {
     id: string;
     name: string;
-    driveId: string;
+    extension?: string;
+    driveId: string | null;
     parentFolderId: string | null;
     permissionType?: PermissionType | null;
     isStarred?: boolean;
@@ -36,13 +37,10 @@ export default function FileItem({
 
     const {
         items,
-        renameOpen,
-        setRenameOpen,
-        shareOpen,
-        setShareOpen,
     } = useResourceMenu(
         id,
         ResourceType.FILE,
+        name,
         driveId,
         parentFolderId,
         permissionType,

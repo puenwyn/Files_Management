@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useDeleteFolder(
     folderId: string,
-    driveId: string,
+    driveId: string | null,
     parentFolderId: string | null
 ) {
 

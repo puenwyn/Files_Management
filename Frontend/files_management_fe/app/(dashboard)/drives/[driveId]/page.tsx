@@ -159,6 +159,10 @@ export default function DriveIdPage() {
                                             key={`file-${item.id}`}
                                             id={item.id}
                                             name={item.name}
+                                            extension={item.extension}
+                                            driveId={item.driveId}
+                                            parentFolderId={item.folderId}
+                                            permissionType={item.permissionType}
                                         />
                                     ))}
                                 </div>

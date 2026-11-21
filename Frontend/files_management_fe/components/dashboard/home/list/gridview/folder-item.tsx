@@ -37,13 +37,12 @@ export default function FolderItem({
 
     const {
         items,
-        renameOpen,
-        setRenameOpen,
         shareOpen,
         setShareOpen,
     } = useResourceMenu(
         id,
         ResourceType.FOLDER,
+        name,
         driveId,
         parentFolderId,
         permissionType,
@@ -95,15 +94,7 @@ export default function FolderItem({
                 <span className="font-medium">{name}</span>
                 <br />
             </div>
-
-            <RenameFolderDialog
-                folderId={id}
-                driveId={driveId}
-                parentFolderId={parentFolderId}
-                open={renameOpen}
-                onOpenChange={setRenameOpen}
-            />
-
+            
             <ShareDialog
                 open={shareOpen}
                 onOpenChange={setShareOpen}

@@ -10,16 +10,19 @@ import { useAddStarred } from "../starred/useAddStarred.hook";
 import { useRemoveStarred } from "../starred/useRemoveStarred.hook";
 import { useResourceDetailStore } from "@/stores/resource-detail.store";
 import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
+import { useResourceDialogStore } from "@/stores/resource-dialog.store";
 
 export function useResourceMenu(
     resourceId: string,
     resourceType: ResourceType,
-    driveId: string,
+    resourceName: string,
+    driveId: string | null,
     parentFolderId: string | null,
     permissionType?: PermissionType | null,
-    isStarred: boolean = false
+    isStarred: boolean = false,
+    extension?: string
 ) {
-    const [renameOpen, setRenameOpen] = useState(false);
+    // const [renameOpen, setRenameOpen] = useState(false);
     const [hideOpen, setHideOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
 
@@ -29,13 +32,11 @@ export function useResourceMenu(
 
     const canShare = permissionType === PermissionType.SHARE;
 
-    const openResource = useResourceDetailStore(
-        (state) => state.openResource
-    );
+    const openResource = useResourceDetailStore((state) => state.openResource);
+    const openConfirm = useConfirmDialogStore((state) => state.openConfirm);
 
-    const openConfirm = useConfirmDialogStore(
-        (state) => state.openConfirm
-    );
+    const openRename = useResourceDialogStore((state) => state.openRename);
+    const openShare = useResourceDialogStore((state) => state.openShare);
 
     const {
         deleteFolderMutation,
@@ -79,7 +80,17 @@ export function useResourceMenu(
                     return {
                         ...newItem,
                         disabled: !canEdit,
-                        onClick: () => setRenameOpen(true),
+                        onClick: () => {
+                            openRename({
+                                id: resourceId,
+                                name: resourceName,
+                                type: resourceType,
+                                driveId,
+                                parentFolderId,
+                                permissionType,
+                                extension,
+                            });
+                        },
                     };
 
                 case ActionType.HIDE:
@@ -161,8 +172,6 @@ export function useResourceMenu(
 
     return {
         items,
-        renameOpen,
-        setRenameOpen,
         hideOpen,
         setHideOpen,
         shareOpen,

@@ -3,6 +3,7 @@ import Header from "@/components/dashboard/layout/Header/header";
 import { Resource } from "@/components/dashboard/layout/ResourceDetail/resource";
 import Sidebar from "@/components/dashboard/layout/Sidebar/sidebar";
 import AppConfirmDialog from "@/components/shared/dialog/app-confirm-dialog";
+import ResourceDialogs from "@/components/shared/dialog/resource-dialog";
 import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
 import { useResourceDetailStore } from "@/stores/resource-detail.store";
 
@@ -39,6 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     }}
                 />
             )}
+            <ResourceDialogs />
         </main>
     )
 }

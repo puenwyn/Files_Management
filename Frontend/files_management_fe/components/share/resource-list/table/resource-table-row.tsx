@@ -28,15 +28,12 @@ export default function ResourceTableRow({
     const router = useRouter();
 
     const {
-        items,
-        renameOpen,
-        setRenameOpen,
-        shareOpen,
-        setShareOpen,
+        items
     } = useResourceMenu(
         resource.id,
         resource.type,
-        resource.driveId ?? "",
+        resource.name,
+        resource.driveId,
         resource.parentFolderId,
         resource.permissionType,
         resource.isStarred
@@ -95,7 +92,7 @@ export default function ResourceTableRow({
                 ))}
             </TableRow>
 
-            {resource.type === ResourceType.FOLDER && (
+            {/* {resource.type === ResourceType.FOLDER && (
                 <>
                     <RenameFolderDialog
                         folderId={resource.id}
@@ -113,7 +110,7 @@ export default function ResourceTableRow({
                         resourceType="folder"
                     />
                 </>
-            )}
+            )} */}
         </>
     );
 }

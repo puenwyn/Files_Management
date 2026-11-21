@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 
 export function useRenameFolder(
     folderId: string,
-    driveId: string,
+    driveId: string | null,
     parentFolderId: string | null,
     onSuccess?: () => void
 ) {

@@ -4,6 +4,8 @@ import { createApiResponseSchema } from "@/schemas/api-response.schema";
 import { FileDetailResponse, fileDetailResponseSchema } from "@/schemas/file/file-detail-response.schema";
 import { FilePreviewResponse, filePreviewResponseSchema } from "@/schemas/file/file-preview-response.schema";
 import { FileListResponse, fileListResponseSchema } from "@/schemas/file/file-response.schema";
+import { RenameFileResponse, renameFileResponseSchema } from "@/schemas/file/rename-file-response.schema";
+import { RenameFileRequest } from "@/schemas/file/rename-file.schema";
 import { completeFileUploadResponseSchema, uploadResponseSchema } from "@/schemas/file/upload-file.schema";
 import { CompleteFileUploadResponse, CreateFileUploadPayload, UploadResponse } from "@/types/file-upload.type";
 import axios from "axios";
@@ -176,6 +178,27 @@ export const fileService = {
                     throw new Error(
                         "You don't have permission to preview this file",
                     );
+                }
+            }
+
+            throw new Error("Can't connect to server");
+        }
+    },
+
+    renameFile: async (fileId: string, data: RenameFileRequest): Promise<RenameFileResponse> => {
+        try {
+            const response = await axiosClient.patch(
+                `/file/${fileId}/rename`,
+                data
+            );
+            const result = createApiResponseSchema(renameFileResponseSchema).parse(response.data);
+            return result.data!;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+
+                if (responseData.error?.code === ErrorCode.NOT_FOUND) {
+                    throw new Error("File not found");
                 }
             }
 
