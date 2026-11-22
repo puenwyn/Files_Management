@@ -52,7 +52,7 @@ export class ACLController {
         );
     }
 
-    @Get("folder/:folderId")
+    @Get("folder/:folderId/user")
     @UseGuards(JwtAuthGuard)
     @ApiOperation({
         summary: "Get users shared with folder",
@@ -61,10 +61,19 @@ export class ACLController {
         @Param("folderId") folderId: string,
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.aclService.getFolderUsers(
-            folderId,
-            req.user.id,
-        );
+        return this.aclService.getFolderUsers(folderId, req.user.id);
+    }
+
+    @Get("file/:fileId/user")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({
+        summary: "Get users shared with file",
+    })
+    async getFileUsers(
+        @Param("fileId") fileId: string,
+        @Req() req: AuthenticatedRequest,
+    ) {
+        return this.aclService.getFileUsers(fileId, req.user.id);
     }
 
     @Post("file/:fileId/share")

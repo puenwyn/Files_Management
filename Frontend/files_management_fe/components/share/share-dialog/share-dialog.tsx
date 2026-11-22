@@ -15,6 +15,7 @@ import { ShareAddPeople } from "./share-add-people";
 import { SharePeopleList } from "./share-people-list";
 import { ShareFooter } from "./share-footer";
 import { ShareGeneralAccess } from "./share-general-access";
+import { ResourceType } from "@/types/resource.type";
 
 interface ShareDialogProps {
     open: boolean;
@@ -22,7 +23,7 @@ interface ShareDialogProps {
 
     resourceId: string;
     resourceName: string;
-    resourceType: "folder" | "file";
+    resourceType: ResourceType;
 }
 
 export function ShareDialog({
@@ -47,11 +48,13 @@ export function ShareDialog({
 
                 <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
                     <ShareAddPeople
-                        folderId={resourceId}
+                        resourceId={resourceId}
+                        resoureType={resourceType}
                     />
 
                     <SharePeopleList
-                        folderId={resourceId}
+                        resourceId={resourceId}
+                        resourceType={resourceType}
                     />
 
                     <section className="mt-7">

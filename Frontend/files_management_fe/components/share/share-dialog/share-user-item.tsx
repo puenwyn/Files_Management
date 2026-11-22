@@ -1,8 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+import { Button } from "@/components/ui/button";
 import { ACLUserResponse } from "@/schemas/acl/acl-user-response.schema";
 import { PermissionType } from "@/constants/permission-type";
 import { SharePermissionSelect } from "./share-permission-select";
+import { X } from "lucide-react";
 
 interface ShareUserItemProps {
     user: ACLUserResponse;
@@ -10,11 +11,15 @@ interface ShareUserItemProps {
         id: string,
         permission: PermissionType,
     ) => void;
+    onRemove: (userId: string) => void;
+    isRemoving?: boolean;
 }
 
 export function ShareUserItem({
     user,
     onPermissionChange,
+    onRemove,
+    isRemoving = false,
 }: ShareUserItemProps) {
     return (
         <div className="flex items-center gap-3 px-4 py-3">
@@ -50,15 +55,26 @@ export function ShareUserItem({
                     Owner
                 </span>
             ) : (
-                <SharePermissionSelect
-                    value={user.permissionType}
-                    onChange={(permission) =>
-                        onPermissionChange(
-                            user.id,
-                            permission,
-                        )
-                    }
-                />
+                <>
+                    <SharePermissionSelect
+                        value={user.permissionType}
+                        onChange={(permission) =>
+                            onPermissionChange(user.id, permission)
+                        }
+                    />
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={isRemoving}
+                        onClick={() => onRemove(user.id)}
+                        title="Remove access"
+                        className="shrink-0"
+                    >
+                        <X className="size-4 text-muted-foreground" />
+                    </Button>
+                </>
             )}
         </div>
     );

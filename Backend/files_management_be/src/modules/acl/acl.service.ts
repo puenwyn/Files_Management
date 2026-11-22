@@ -369,7 +369,6 @@ export class ACLService {
         folderId: string,
         userId: string,
     ): Promise<ACLUserResponseDTO[]> {
-        // Người gọi phải có quyền SHARE mới được xem danh sách người được share
         await this.checkPermisison(
             folderId,
             userId,
@@ -663,6 +662,48 @@ export class ACLService {
             },
             permissionType: file.permissionType,
             resourceType: ResourceType.FILE,
+        }));
+    }
+
+    async getFileUsers(
+        fileId: string,
+        userId: string,
+    ): Promise<ACLUserResponseDTO[]> {
+        const acl = await this.getFilePermission(fileId, userId);
+
+        if (
+            !acl ||
+            !this.hasPermission(acl.permissionType, PermissionType.SHARE)
+        ) {
+            throw new ForbiddenException(
+                "You don't have permission to view shared users!",
+            );
+        }
+
+        const acls = await this.prisma.aCL.findMany({
+            where: {
+                fileId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
+
+        return acls.map((acl) => ({
+            id: acl.user.id,
+            fullName: acl.user.fullName,
+            email: acl.user.email,
+            permissionType: acl.permissionType,
+            isOwner: acl.isOwner,
         }));
     }
 

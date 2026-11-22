@@ -36,9 +36,7 @@ export default function FolderItem({
     const router = useRouter();
 
     const {
-        items,
-        shareOpen,
-        setShareOpen,
+        items
     } = useResourceMenu(
         id,
         ResourceType.FOLDER,
@@ -94,14 +92,6 @@ export default function FolderItem({
                 <span className="font-medium">{name}</span>
                 <br />
             </div>
-            
-            <ShareDialog
-                open={shareOpen}
-                onOpenChange={setShareOpen}
-                resourceId={id}
-                resourceName={name}
-                resourceType="folder"
-            />
         </>
     )
 }

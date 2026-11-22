@@ -1,4 +1,4 @@
-"use client";import { ShareDialog } from "@/components/share/share-dialog/share-dialog";
+"use client"; import { ShareDialog } from "@/components/share/share-dialog/share-dialog";
 import { useResourceDialogStore } from "@/stores/resource-dialog.store";
 import RenameResourceDialog from "./rename/rename-dialog";
 
@@ -34,9 +34,7 @@ export default function ResourceDialogs() {
                 }}
                 resourceId={resource.id}
                 resourceName={resource.name}
-                resourceType={
-                    resource.type === "FOLDER" ? "folder" : "file"
-                }
+                resourceType={resource.type}
             />
         </>
     );

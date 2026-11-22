@@ -23,9 +23,7 @@ export function useResourceMenu(
     isStarred: boolean = false,
     extension?: string
 ) {
-    // const [renameOpen, setRenameOpen] = useState(false);
     const [hideOpen, setHideOpen] = useState(false);
-    const [shareOpen, setShareOpen] = useState(false);
 
     const canEdit =
         permissionType === PermissionType.EDIT ||
@@ -117,10 +115,21 @@ export function useResourceMenu(
                     };
 
                 case ActionType.MANAGE_ACCESS:
+                case ActionType.MANAGE_ACCESS:
                     return {
                         ...newItem,
                         disabled: !canShare,
-                        onClick: () => setShareOpen(true),
+                        onClick: () => {
+                            openShare({
+                                id: resourceId,
+                                name: resourceName,
+                                type: resourceType,
+                                driveId,
+                                parentFolderId,
+                                permissionType,
+                                extension,
+                            });
+                        },
                     };
 
                 case ActionType.INFORMATION:
@@ -183,8 +192,6 @@ export function useResourceMenu(
         items,
         hideOpen,
         setHideOpen,
-        shareOpen,
-        setShareOpen,
         isDeleteLoading,
         isDeleteError,
         errorLoading,

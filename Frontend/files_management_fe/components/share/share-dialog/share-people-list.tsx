@@ -4,29 +4,49 @@ import { ShareUserItem } from "./share-user-item";
 import { useGetFolderUsers } from "@/hooks/acl/useGetFolderUsers.hook";
 import { useShareFolder } from "@/hooks/acl/useShareFolder.hook";
 import { PermissionType } from "@/constants/permission-type";
+import { ResourceType } from "@/types/resource.type";
+import { useGetFileUsers } from "@/hooks/acl/useGetFileUsers.hook";
+import { useShareFile } from "@/hooks/acl/useShareFile.hook";
+import { useRemoveSharedAccess } from "@/hooks/acl/useRemoveSharedAccess.hook";
 
 interface SharePeopleListProps {
-    folderId: string;
+    resourceId: string;
+    resourceType: ResourceType
 }
 
 export function SharePeopleList({
-    folderId,
+    resourceId,
+    resourceType
 }: SharePeopleListProps) {
-    const {
-        data: users = [],
-        isLoading,
-        isError,
-    } = useGetFolderUsers(folderId);
+    const isFolder = resourceType === ResourceType.FOLDER;
 
-    const { shareFolderMutation } = useShareFolder(folderId);
+    const folderUsers = useGetFolderUsers(isFolder ? resourceId : "");
+    const fileUsers = useGetFileUsers(isFolder ? "" : resourceId);
+
+    const users = isFolder ? folderUsers.data ?? [] : fileUsers.data ?? [];
+    const isLoading = isFolder ? folderUsers.isLoading : fileUsers.isLoading;
+    const isError = isFolder ? folderUsers.isError : fileUsers.isError;
+
+    const shareFolder = useShareFolder(resourceId);
+    const shareFile = useShareFile(resourceId);
+
+    const removeAccess = useRemoveSharedAccess(resourceId, resourceType);
+
     const handlePermissionChange = (
         userId: string,
         permission: PermissionType,
     ) => {
-        shareFolderMutation.mutate({
+        const mutation = isFolder ? shareFolder.shareFolderMutation : shareFile.shareFileMutation;
+        mutation.mutate({
             targetUserId: userId,
             permission,
         });
+    };
+
+    console.log("THIS IS FILE USERS: ", fileUsers);
+
+    const handleRemoveAccess = (userId: string) => {
+        removeAccess.removeSharedAccessMutation.mutate(userId);
     };
 
     return (
@@ -41,6 +61,8 @@ export function SharePeopleList({
                         key={user.id}
                         user={user}
                         onPermissionChange={handlePermissionChange}
+                        onRemove={handleRemoveAccess}
+                        isRemoving={removeAccess.isLoading}
                     />
                 ))}
             </div>

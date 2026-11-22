@@ -8,13 +8,16 @@ import { Input } from "@/components/ui/input";
 import { SharePermissionSelect } from "./share-permission-select";
 
 import { useSharePeople } from "@/hooks/acl/useSharePeople.hook";
+import { ResourceType } from "@/types/resource.type";
 
 interface ShareAddPeopleProps {
-    folderId: string;
+    resourceId: string;
+    resoureType: ResourceType;
 }
 
 export function ShareAddPeople({
-    folderId,
+    resourceId,
+    resoureType
 }: ShareAddPeopleProps) {
     const {
         keyword,
@@ -23,12 +26,11 @@ export function ShareAddPeople({
         permission,
         isLoading,
         isSharing,
-
         setKeyword,
         selectUser,
         setPermission,
         shareUser,
-    } = useSharePeople(folderId);
+    } = useSharePeople(resourceId, resoureType);
 
     return (
         <section>

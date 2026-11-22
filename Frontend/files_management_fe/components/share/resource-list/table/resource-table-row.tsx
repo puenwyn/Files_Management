@@ -102,26 +102,6 @@ export default function ResourceTableRow({
                     </TableCell>
                 ))}
             </TableRow>
-
-            {/* {resource.type === ResourceType.FOLDER && (
-                <>
-                    <RenameFolderDialog
-                        folderId={resource.id}
-                        driveId={resource.driveId ?? ""}
-                        parentFolderId={resource.parentFolderId}
-                        open={renameOpen}
-                        onOpenChange={setRenameOpen}
-                    />
-
-                    <ShareDialog
-                        open={shareOpen}
-                        onOpenChange={setShareOpen}
-                        resourceId={resource.id}
-                        resourceName={resource.name}
-                        resourceType="folder"
-                    />
-                </>
-            )} */}
         </>
     );
 }
