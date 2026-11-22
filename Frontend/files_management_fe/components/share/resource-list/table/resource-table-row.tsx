@@ -14,22 +14,24 @@ import {
     ResourceTableColumn,
     ResourceTableResource,
 } from "./resource-table-column";
+import { fa } from "zod/v4/locales";
+import { useTrashMenu } from "@/hooks/action/useTrashMenu.hook";
 
 interface ResourceTableRowProps {
     resource: ResourceTableResource;
     columns: ResourceTableColumn[];
+    isTrash?: boolean;
 }
 
 export default function ResourceTableRow({
     resource,
     columns,
+    isTrash = false
 }: ResourceTableRowProps) {
 
     const router = useRouter();
 
-    const {
-        items
-    } = useResourceMenu(
+    const { items: resourceItems } = useResourceMenu(
         resource.id,
         resource.type,
         resource.name,
@@ -38,6 +40,15 @@ export default function ResourceTableRow({
         resource.permissionType,
         resource.isStarred
     );
+
+    const { items: trashItems } = useTrashMenu(
+        resource.id,
+        resource.type,
+        resource.driveId,
+        resource.parentFolderId
+    );
+
+    const items = isTrash ? trashItems : resourceItems;
 
     const canAccess = resource.isAccessed !== false;
 

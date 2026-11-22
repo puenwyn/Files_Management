@@ -4,7 +4,7 @@ import { createApiResponseSchema } from "@/schemas/api-response.schema";
 import { CommonResponse, commonResponseSchema } from "@/schemas/common/common-response.schema";
 import { FileDetailResponse, fileDetailResponseSchema } from "@/schemas/file/file-detail-response.schema";
 import { FilePreviewResponse, filePreviewResponseSchema } from "@/schemas/file/file-preview-response.schema";
-import { FileListResponse, fileListResponseSchema } from "@/schemas/file/file-response.schema";
+import { FileListResponse, fileListResponseSchema, TrashFileListResponse, trashFileListResponseSchema } from "@/schemas/file/file-response.schema";
 import { RenameFileResponse, renameFileResponseSchema } from "@/schemas/file/rename-file-response.schema";
 import { RenameFileRequest } from "@/schemas/file/rename-file.schema";
 import { completeFileUploadResponseSchema, uploadResponseSchema } from "@/schemas/file/upload-file.schema";
@@ -161,27 +161,20 @@ export const fileService = {
             const response = await axiosClient.get(
                 `/file/${fileId}/preview`,
             );
-
-            const result = createApiResponseSchema(
-                filePreviewResponseSchema,
-            ).parse(response.data);
-
+            const result = createApiResponseSchema(filePreviewResponseSchema,).parse(response.data);
             return result.data!;
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 const responseData = error.response?.data;
-
                 if (responseData?.error?.code === ErrorCode.NOT_FOUND) {
                     throw new Error("File not found");
                 }
-
                 if (responseData?.error?.code === ErrorCode.FORBIDDEN) {
                     throw new Error(
                         "You don't have permission to preview this file",
                     );
                 }
             }
-
             throw new Error("Can't connect to server");
         }
     },
@@ -207,10 +200,12 @@ export const fileService = {
         }
     },
 
-    deleteFile: async (fileId: string): Promise<CommonResponse> => {
+    deleteFile: async (fileId: string): Promise<RenameFileResponse> => {
         try {
-            const response = await axiosClient.delete(`/file/${fileId}`);
-            const result = createApiResponseSchema(commonResponseSchema).parse(response.data);
+            const response = await axiosClient.delete(
+                `/file/${fileId}/delete`
+            );
+            const result = createApiResponseSchema(renameFileResponseSchema).parse(response.data);
             return result.data!;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -226,12 +221,12 @@ export const fileService = {
         }
     },
 
-    restoreFile: async (fileId: string): Promise<CommonResponse> => {
+    restoreFile: async (fileId: string): Promise<RenameFileResponse> => {
         try {
             const response = await axiosClient.patch(
                 `/file/${fileId}/restore`
             );
-            const result = createApiResponseSchema(commonResponseSchema).parse(response.data);
+            const result = createApiResponseSchema(renameFileResponseSchema).parse(response.data);
             return result.data!;
         } catch (error) {
             if (axios.isAxiosError(error)) {
@@ -249,6 +244,30 @@ export const fileService = {
                 }
             }
             throw new Error("Can't connect to server");
+        }
+    },
+
+    getTrashFiles: async (): Promise<TrashFileListResponse> => {
+        try {
+            const response = await axiosClient.get("/file/trash");
+
+            const result = createApiResponseSchema(
+                trashFileListResponseSchema
+            ).parse(response.data);
+
+            return result.data!;
+        } catch (error: unknown) {
+            console.log("This is error", error);
+
+            if (axios.isAxiosError(error)) {
+                const responseData = error.response?.data;
+
+                if (responseData?.error?.code === ErrorCode.FORBIDDEN) {
+                    throw new Error("You don't have permission to access trash");
+                }
+            }
+
+            throw new Error("Failed to get trash files");
         }
     },
 }

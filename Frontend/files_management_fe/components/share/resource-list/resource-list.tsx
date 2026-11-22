@@ -14,12 +14,14 @@ interface ResourceListProps {
     resources: ResourceTableResource[];
     columns?: ResourceTableColumn[];
     isLoading?: boolean;
+    isTrash?: boolean;
 }
 
 export default function ResourceList({
     resources,
     columns = defaultResourceTableColumns,
     isLoading = false,
+    isTrash = false
 }: ResourceListProps) {
     const viewMode = useViewModeStore(
         (state) => state.viewMode
@@ -58,6 +60,7 @@ export default function ResourceList({
                 <ResourceTable
                     resources={resources}
                     columns={columns}
+                    isTrash={isTrash}
                 />
             )}
         </div>

@@ -11,6 +11,7 @@ import { useRemoveStarred } from "../starred/useRemoveStarred.hook";
 import { useResourceDetailStore } from "@/stores/resource-detail.store";
 import { useConfirmDialogStore } from "@/stores/confirm-dialog.store";
 import { useResourceDialogStore } from "@/stores/resource-dialog.store";
+import { useDeleteFile } from "../file/useDeleteFile.hook";
 
 export function useResourceMenu(
     resourceId: string,
@@ -45,6 +46,14 @@ export function useResourceMenu(
         error: errorLoading,
         isSuccess: isDeleteSuccess,
     } = useDeleteFolder(resourceId, driveId, parentFolderId);
+
+    const {
+        deleteFileMutation,
+        isLoading: isDeleteFileLoading,
+        isError: isDeleteFileError,
+        error: fileErrorLoading,
+        isSuccess: isDeleteFileSuccess,
+    } = useDeleteFile(resourceId, driveId, parentFolderId);
 
     const { addStarredMutation } = useAddStarred(
         resourceId,
@@ -124,21 +133,21 @@ export function useResourceMenu(
                     return {
                         ...newItem,
                         onClick: () => {
-                            if (isFolder) {
-                                openConfirm({
-                                    title: "Delete resource?",
-                                    description:
-                                        "Are you sure you want to delete this resource?",
-                                    confirmText: "Delete",
-                                    cancelText: "Cancel",
-                                    destructive: true,
-                                    onConfirm: () => {
+                            openConfirm({
+                                title: "Delete resource?",
+                                description:
+                                    "Are you sure you want to delete this resource?",
+                                confirmText: "Delete",
+                                cancelText: "Cancel",
+                                destructive: true,
+                                onConfirm: () => {
+                                    if (isFolder) {
                                         deleteFolderMutation.mutate();
-                                    },
-                                });
-                            } else {
-                                console.log("DELETE FILE:", resourceId);
-                            }
+                                    } else {
+                                        deleteFileMutation.mutate();
+                                    }
+                                },
+                            });
                         },
                     };
 

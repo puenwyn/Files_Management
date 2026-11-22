@@ -250,8 +250,6 @@ export class FileService {
         };
     }
 
-
-
     async getDriveFiles(userId: string, driveId: string) {
         await this.driveService.checkDriveOwnership(driveId, userId);
 
@@ -259,6 +257,7 @@ export class FileService {
             where: {
                 driveId,
                 folderId: null,
+                isDeleted: false,
                 acls: {
                     some: { userId },
                 },
@@ -268,21 +267,40 @@ export class FileService {
             },
             include: {
                 acls: {
-                    where: { userId },
-                    select: {
-                        permissionType: true,
-                        isOwner: true,
+                    where: {
+                        OR: [
+                            { userId },
+                            { isOwner: true },
+                        ],
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
                     },
                 },
                 latestVersion: true,
             },
             orderBy: {
-                createdAt: 'desc',
+                createdAt: "desc",
             },
         });
 
         return files.map((file) => {
-            const acl = file.acls[0];
+            const acl = file.acls.find(
+                (item) => item.userId === userId,
+            );
+
+            const owner = file.acls.find(
+                (item) => item.isOwner,
+            );
+
+            if (!owner) {
+                throw new NotFoundException("File owner not found!");
+            }
 
             return {
                 id: file.id,
@@ -302,8 +320,11 @@ export class FileService {
                 updatedAt: file.updatedAt,
                 accessedAt: file.accessedAt,
                 permissionType: acl?.permissionType ?? null,
-                isOwner: acl?.isOwner ?? false,
                 isAccessed: false,
+                owner: {
+                    id: owner.user.id,
+                    fullName: owner.user.fullName,
+                },
             };
         });
     }
@@ -319,27 +340,47 @@ export class FileService {
         const files = await this.prisma.file.findMany({
             where: {
                 folderId: parentFolderId,
+                isDeleted: false,
                 latestVersion: {
                     is: { isUploaded: true },
                 },
             },
             include: {
                 acls: {
-                    where: { userId },
-                    select: {
-                        permissionType: true,
-                        isOwner: true,
+                    where: {
+                        OR: [
+                            { userId },
+                            { isOwner: true },
+                        ],
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                fullName: true,
+                            },
+                        },
                     },
                 },
                 latestVersion: true,
             },
             orderBy: {
-                createdAt: 'desc',
+                createdAt: "desc",
             },
         });
 
         return files.map((file) => {
-            const acl = file.acls[0];
+            const acl = file.acls.find(
+                (item) => item.userId === userId,
+            );
+
+            const owner = file.acls.find(
+                (item) => item.isOwner,
+            );
+
+            if (!owner) {
+                throw new NotFoundException("File owner not found!");
+            }
 
             return {
                 id: file.id,
@@ -359,8 +400,11 @@ export class FileService {
                 updatedAt: file.updatedAt,
                 accessedAt: file.accessedAt,
                 permissionType: acl?.permissionType ?? PermissionType.VIEW,
-                isOwner: acl?.isOwner ?? false,
                 isAccessed: !!acl,
+                owner: {
+                    id: owner.user.id,
+                    fullName: owner.user.fullName,
+                },
             };
         });
     }

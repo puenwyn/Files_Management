@@ -5,6 +5,7 @@ import NewResourceButton from "./new-resource-button";
 import UploadResourceButton from "./upload-resource-button";
 import AppIconButton from "@/components/dashboard/iconbutton/app-icon-button";
 import { Eye, Info } from "lucide-react";
+import { ViewModeToggle } from "@/components/dashboard/common/app-view-mode";
 
 interface ResourceToolbarProps {
     driveId: string | null;
@@ -21,6 +22,7 @@ export default function ResourceToolbar({
 
     return (
         <div className="flex items-center gap-2">
+            <ViewModeToggle />
 
             <AppIconButton icon={Eye} active={isOpen} onClick={togglePanel} />
 

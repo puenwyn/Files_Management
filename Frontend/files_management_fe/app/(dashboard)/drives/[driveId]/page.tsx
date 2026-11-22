@@ -4,15 +4,22 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 
-import FolderItem from "@/components/dashboard/home/list/gridview/folder-item";
-import FileItem from "@/components/dashboard/home/list/gridview/file-item";
+import { Button } from "@/components/ui/button";
+
+import StateView from "@/components/common/state-view/state-view";
+import { stateViewData } from "@/components/common/state-view/state-view.data";
 
 import { AppBreadcrumb } from "@/components/shared/breadcrumb/app-breadcrumb";
 import AppContextMenu from "@/components/shared/contextmenu/app-context-menu";
 import VerifyPasswordDialog from "@/components/shared/dialog/verify-password-dialog";
 import CreateFolderDialog from "@/components/shared/dialog/create-dialog";
 
-import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/dashboard/layout/Title/page-title";
+import ResourceToolbar from "@/components/share/resource-toolbar/resource-toolbar";
+import ResourceList from "@/components/share/resource-list/resource-list";
+
+import { ResourceType } from "@/types/resource.type";
+import { ResourceTableResource } from "@/components/share/resource-list/table/resource-table-column";
 
 import { useFindDrive } from "@/hooks/drive/useFindDrive.hook";
 import { useGetDriveFolders } from "@/hooks/folder/useGetDriveFolders.hook";
@@ -20,32 +27,31 @@ import { useGetDriveFiles } from "@/hooks/file/useGetDriveFiles.hook";
 import { useHideHidden } from "@/schemas/auth/useHideHidden.hook";
 import { useContextMenu } from "@/hooks/action/useContextMenu.hook";
 
-import StateView from "@/components/common/state-view/state-view";
-import { stateViewData } from "@/components/common/state-view/state-view.data";
-import ResourceToolbar from "@/components/share/resource-toolbar/resource-toolbar";
-
 export default function DriveIdPage() {
     const params = useParams<{ driveId: string }>();
     const driveId = params.driveId;
 
     const [verifyPasswordOpen, setVerifyPasswordOpen] = useState(false);
 
+    // Drive
     const {
-        data,
-        isLoading,
-        isError,
-        error,
+        data: drive,
+        isLoading: isDriveLoading,
+        isError: isDriveError,
+        error: driveError,
     } = useFindDrive(driveId);
 
+    // Folders
     const {
         data: folders = [],
         showHidden,
-        isPending,
+        isPending: isFoldersLoading,
         isError: isFoldersError,
         error: foldersError,
         refetch,
     } = useGetDriveFolders(driveId);
 
+    // Files
     const {
         data: files = [],
         isLoading: isFilesLoading,
@@ -53,6 +59,7 @@ export default function DriveIdPage() {
         error: filesError,
     } = useGetDriveFiles(driveId);
 
+    // Hide hidden folders
     const {
         hideHidden,
         isLoading: isHideLoading,
@@ -60,18 +67,21 @@ export default function DriveIdPage() {
         refetch();
     });
 
+    // Context menu
     const {
         items,
         createFolderOpen,
         setCreateFolderOpen,
     } = useContextMenu();
 
-    if (isLoading) {
+    // Loading
+    if (isDriveLoading) {
         return <div>Loading...</div>;
     }
 
-    if (isError || !data) {
-        return <div>{error?.message}</div>;
+    // Error
+    if (isDriveError || !drive) {
+        return <div>{driveError?.message}</div>;
     }
 
     if (isFoldersError) {
@@ -82,14 +92,43 @@ export default function DriveIdPage() {
         return <div>{filesError?.message}</div>;
     }
 
+    // Normalize folders and files into ResourceTableResource[]
+    const resources: ResourceTableResource[] = [
+        ...folders.map((folder) => ({
+            id: folder.id,
+            name: folder.folderName,
+            type: ResourceType.FOLDER,
+            driveId: folder.driveId,
+            parentFolderId: folder.parentFolderId,
+            permissionType: folder.permissionType,
+            status: folder.status,
+            isStarred: folder.isStarred,
+            owner: folder.owner?.fullName ?? null,
+            modifiedAt: folder.updatedAt.toISOString(),
+        })),
+
+        ...files.map((file) => ({
+            id: file.id,
+            name: file.name,
+            type: ResourceType.FILE,
+            driveId: file.driveId,
+            parentFolderId: file.folderId,
+            permissionType: file.permissionType,
+            owner: file.owner?.fullName ?? null,
+            modifiedAt: file.updatedAt,
+            size: file.size,
+        })),
+    ];
+
+    const isLoading = isFoldersLoading || isFilesLoading;
     const isEmpty = folders.length === 0 && files.length === 0;
 
     return (
-        <>
+        <main className="min-h-full flex flex-col">
             <AppBreadcrumb
                 items={[
                     { label: "Drive", href: "/drives" },
-                    { label: data.driveName },
+                    { label: drive.driveName },
                 ]}
             />
 
@@ -115,60 +154,19 @@ export default function DriveIdPage() {
             </div>
 
             <AppContextMenu items={items}>
-                {isPending || isFilesLoading ? (
-                    <div>Loading resources...</div>
+                {isLoading ? (
+                    <ResourceList
+                        resources={[]}
+                        isLoading
+                    />
                 ) : isEmpty ? (
                     <div className="h-full flex items-center justify-center">
                         <StateView {...stateViewData.emptyFolder} />
                     </div>
                 ) : (
-                    <div className="w-full flex flex-col gap-8">
-                        {/* Folder Section */}
-                        {folders.length > 0 && (
-                            <section className="flex flex-col gap-4">
-                                <h3 className="text-base font-semibold">
-                                    Folders
-                                </h3>
-
-                                <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                                    {folders.map((item) => (
-                                        <FolderItem
-                                            key={`folder-${item.id}`}
-                                            id={item.id}
-                                            name={item.folderName}
-                                            driveId={item.driveId ?? ""}
-                                            parentFolderId={item.parentFolderId}
-                                            isHidden={item.status !== "SHOW"}
-                                            permissionType={item.permissionType ?? undefined}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* File Section */}
-                        {files.length > 0 && (
-                            <section className="flex flex-col gap-4">
-                                <h3 className="text-base font-semibold">
-                                    Files
-                                </h3>
-
-                                <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                                    {files.map((item) => (
-                                        <FileItem
-                                            key={`file-${item.id}`}
-                                            id={item.id}
-                                            name={item.name}
-                                            extension={item.extension}
-                                            driveId={item.driveId}
-                                            parentFolderId={item.folderId}
-                                            permissionType={item.permissionType}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-                    </div>
+                    <ResourceList
+                        resources={resources}
+                    />
                 )}
             </AppContextMenu>
 
@@ -186,6 +184,6 @@ export default function DriveIdPage() {
                     refetch();
                 }}
             />
-        </>
+        </main>
     );
 }

@@ -6,11 +6,13 @@ import { defaultResourceTableColumns, ResourceTableColumn, ResourceTableResource
 interface ResourceTableProps {
     resources: ResourceTableResource[];
     columns?: ResourceTableColumn[];
+    isTrash?: boolean;
 }
 
 export default function ResourceTable({
     resources,
-    columns = defaultResourceTableColumns
+    columns = defaultResourceTableColumns,
+    isTrash = false
 }: ResourceTableProps) {
     return (
         <div className="">
@@ -33,6 +35,7 @@ export default function ResourceTable({
                             key={resource.id}
                             resource={resource}
                             columns={columns}
+                            isTrash={isTrash}
                         />
                     ))}
                 </TableBody>

@@ -15,6 +15,8 @@ export default function StarredPage() {
         id: folder.id,
         name: folder.folderName,
         type: ResourceType.FOLDER,
+        driveId: folder.driveId,
+        parentFolderId: folder.parentFolderId,
         owner: folder.owner.fullName,
         modifiedAt: folder.updatedAt.toLocaleDateString(),
         starredAt: folder.starredAt.toLocaleDateString(),

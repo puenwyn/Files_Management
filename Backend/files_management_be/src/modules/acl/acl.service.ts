@@ -601,6 +601,7 @@ export class ACLService {
                 name: string;
                 folderId: string | null;
                 driveId: string;
+                size: bigint;
                 createdAt: Date;
                 updatedAt: Date;
                 permissionType: PermissionType;
@@ -613,6 +614,7 @@ export class ACLService {
             f.name,
             f."folderId",
             f."driveId",
+            f.size,
             f."createdAt",
             f."updatedAt",
             shared_acl."permissionType",
@@ -624,7 +626,6 @@ export class ACLService {
         INNER JOIN "File" f
             ON f.id = shared_acl."fileId"
 
-        -- Lấy ACL của owner file
         INNER JOIN "ACL" owner_acl
             ON owner_acl."fileId" = f.id
             AND owner_acl."isOwner" = true
@@ -636,7 +637,6 @@ export class ACLService {
             shared_acl."userId" = ${userId}
             AND shared_acl."isOwner" = false
 
-            -- Không hiển thị file nếu folder cha được share trực tiếp
             AND NOT EXISTS (
                 SELECT 1
                 FROM "ACL" parent_acl
@@ -654,6 +654,7 @@ export class ACLService {
             name: file.name,
             folderId: file.folderId,
             driveId: file.driveId,
+            size: file.size.toString(),
             createdAt: file.createdAt,
             updatedAt: file.updatedAt,
             owner: {

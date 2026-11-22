@@ -51,6 +51,10 @@ export default function ResourceGrid({
                                 key={item.id}
                                 id={item.id}
                                 name={item.name ?? ""}
+                                driveId={item.driveId}
+                                parentFolderId={item.parentFolderId}
+                                permissionType={item.permissionType}
+                                isStarred={item.isStarred}
                             />
                         ))}
                     </div>
