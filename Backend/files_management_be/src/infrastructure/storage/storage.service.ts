@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { GetObjectCommand, HeadBucketCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AppConfigService } from "src/config/app_config.service";
+import { Readable } from "node:stream";
 
 @Injectable()
 export class StorageService {
@@ -115,5 +116,20 @@ export class StorageService {
             url,
             expiresIn: 300,
         };
+    }
+
+    async getObjectStream(objectKey: string): Promise<Readable> {
+        const result = await this.s3Client.send(
+            new GetObjectCommand({
+                Bucket: this.configService.MINIO_BUCKET,
+                Key: objectKey,
+            }),
+        );
+
+        if (!result.Body) {
+            throw new NotFoundException("File not found in storage");
+        }
+
+        return result.Body as Readable;
     }
 }

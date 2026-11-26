@@ -57,6 +57,7 @@ enum ScanStatus {
   SCANNING
   THREAT
   VALID
+  FAILED
 }
 
 model User {

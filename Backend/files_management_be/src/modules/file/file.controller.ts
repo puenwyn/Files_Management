@@ -1,14 +1,20 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from "@nestjs/common";
-import { FileService } from "./file.service";
 import type { AuthenticatedRequest } from "src/common/interfaces/authenticated-request.interface";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CreateFileUploadDTO } from "./dtos/create-file-upload.dto";
 import { CompleteFileUploadDTO } from "./dtos/complete-file-upload.dto";
 import { RenameFileDTO } from "./dtos/rename-file.dto";
+import { FileUploadService } from "./services/file-upload.service";
+import { FileQueryService } from "./services/fire-query.service";
+import { FileMutationService } from "./services/fire-mutation.service";
 
 @Controller("file")
 export class FileController {
-    constructor(private readonly fileService: FileService) { }
+    constructor(
+        private readonly fileUploadService: FileUploadService,
+        private readonly fileQueryService: FileQueryService,
+        private readonly fileMutationService: FileMutationService,
+    ) { }
 
     @Post("upload")
     @UseGuards(JwtAuthGuard)
@@ -16,7 +22,7 @@ export class FileController {
         @Req() req: AuthenticatedRequest,
         @Body() dto: CreateFileUploadDTO,
     ) {
-        return this.fileService.createUpload(req.user.id, dto);
+        return this.fileUploadService.createUpload(req.user.id, dto);
     }
 
     @Post("complete-upload")
@@ -25,7 +31,7 @@ export class FileController {
         @Req() req: AuthenticatedRequest,
         @Body() dto: CompleteFileUploadDTO,
     ) {
-        return this.fileService.completeUpload(req.user.id, dto);
+        return this.fileUploadService.completeUpload(req.user.id, dto);
     }
 
     @Get("drive/:id")
@@ -34,23 +40,22 @@ export class FileController {
         @Param("id") driveId: string,
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.fileService.getDriveFiles(req.user.id, driveId);
+        return this.fileQueryService.getDriveFiles(req.user.id, driveId);
     }
 
-    // Get files inside a folder
     @Get("folder/:folderId")
     @UseGuards(JwtAuthGuard)
     async getFolderFiles(
         @Param("folderId") folderId: string,
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.fileService.getFolderFiles(req.user.id, folderId);
+        return this.fileQueryService.getFolderFiles(req.user.id, folderId);
     }
 
     @Get("trash")
     @UseGuards(JwtAuthGuard)
     getTrash(@Req() req: AuthenticatedRequest) {
-        return this.fileService.getTrash(req.user.id);
+        return this.fileQueryService.getTrash(req.user.id);
     }
 
     @Get(":id")
@@ -59,7 +64,7 @@ export class FileController {
         @Param("id") fileId: string,
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.fileService.getFileDetail(req.user.id, fileId);
+        return this.fileQueryService.getFileDetail(req.user.id, fileId);
     }
 
     @Get(":id/preview")
@@ -68,10 +73,7 @@ export class FileController {
         @Param("id") fileId: string,
         @Req() req: AuthenticatedRequest,
     ) {
-        return this.fileService.getFilePreview(
-            req.user.id,
-            fileId,
-        );
+        return this.fileQueryService.getFilePreview(req.user.id, fileId);
     }
 
     @Patch(":fileId/rename")
@@ -81,7 +83,7 @@ export class FileController {
         @Param("fileId") fileId: string,
         @Body() dto: RenameFileDTO,
     ) {
-        return this.fileService.renameFile(req.user.id, fileId, dto.newName);
+        return this.fileMutationService.renameFile(req.user.id, fileId, dto.newName);
     }
 
     @Delete(":fileId/delete")
@@ -90,7 +92,7 @@ export class FileController {
         @Req() req: AuthenticatedRequest,
         @Param("fileId") fileId: string,
     ) {
-        return this.fileService.deleteFile(req.user.id, fileId);
+        return this.fileMutationService.deleteFile(req.user.id, fileId);
     }
 
     @Patch(":fileId/restore")
@@ -99,6 +101,6 @@ export class FileController {
         @Req() req: AuthenticatedRequest,
         @Param("fileId") fileId: string,
     ) {
-        return this.fileService.restoreFile(req.user.id, fileId);
+        return this.fileMutationService.restoreFile(req.user.id, fileId);
     }
 }
