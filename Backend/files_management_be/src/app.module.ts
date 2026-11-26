@@ -14,6 +14,7 @@ import { NotificationModule } from "./modules/notification/notification.module";
 import { StarredModule } from "./modules/starred/starred.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
 import { FileModule } from './modules/file/file.module';
+import { AntivirusModule } from "./infrastructure/antivirus/antivirus.module";
 
 @Module({
     imports: [
@@ -29,7 +30,8 @@ import { FileModule } from './modules/file/file.module';
         StarredModule,
         WebSocketModule,
         StorageModule,
-        FileModule
+        FileModule,
+        AntivirusModule,
     ],
     controllers: [AppController]
 })

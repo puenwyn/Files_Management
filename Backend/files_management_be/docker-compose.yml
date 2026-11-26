@@ -42,8 +42,19 @@ services:
 
     command: server /data --console-address ":9001"
       
+  clamav:
+    image: clamav/clamav:latest
+    container_name: files_management_clamav
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:3310:3310"
+
+    volumes:
+      - clamav_data:/var/lib/clamav
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  clamav_data:

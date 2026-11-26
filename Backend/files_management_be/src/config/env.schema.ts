@@ -34,6 +34,9 @@ export const EnvSchema = z.object({
     MINIO_ROOT_USER: z.string(),
     MINIO_ROOT_PASSWORD: z.string(),
     MINIO_BUCKET: z.string(),
+
+    CLAMAV_HOST: z.string().default("localhost"),
+    CLAMAV_PORT: z.coerce.number(),
 });
 
 export type EnvSchemaType = z.infer<typeof EnvSchema>

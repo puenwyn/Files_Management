@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Drive, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DriveResponseDTO } from "./dtos/drive-response.dto";
@@ -139,6 +139,74 @@ export class DriveService {
             usedSpace,
             usedPercent
         }
+    }
+
+    async checkStorageCapacity(
+        driveId: string,
+        additionalSpace: bigint,
+    ) {
+        const drive = await this.prisma.drive.findUnique({
+            where: { id: driveId },
+            select: {
+                totalSpace: true,
+                usedSpace: true,
+                isDeleted: true,
+            },
+        });
+
+        if (!drive || drive.isDeleted) {
+            throw new NotFoundException("Drive not found!");
+        }
+
+        if (drive.usedSpace + additionalSpace > drive.totalSpace) {
+            throw new BadRequestException(
+                "Not enough storage space in this Drive!",
+            );
+        }
+    }
+
+    async updateStorageUsage(
+        tx: Prisma.TransactionClient,
+        driveId: string,
+        delta: bigint,
+    ) {
+        if (delta === 0n) return;
+
+        const drive = await tx.drive.findUnique({
+            where: { id: driveId },
+            select: {
+                id: true,
+                totalSpace: true,
+                usedSpace: true,
+            },
+        });
+
+        if (!drive) {
+            throw new NotFoundException("Drive not found!");
+        }
+
+        const newUsedSpace = drive.usedSpace + delta;
+
+        if (newUsedSpace < 0n) {
+            throw new Error("Invalid storage usage!");
+        }
+
+        if (newUsedSpace > drive.totalSpace) {
+            throw new Error("Drive storage capacity exceeded!");
+        }
+
+        const usedPercent =
+            drive.totalSpace > 0n
+                ? Number(newUsedSpace) / Number(drive.totalSpace) * 100
+                : 0;
+
+        return tx.drive.update({
+            where: { id: driveId },
+            data: {
+                usedSpace: newUsedSpace,
+                usedPercent,
+            },
+        });
     }
 
 }

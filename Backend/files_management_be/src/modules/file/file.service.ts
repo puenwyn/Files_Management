@@ -3,7 +3,7 @@ import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { DriveService } from '../drive/drive.service';
 import { FolderService } from '../folder/folder.service';
 import { ACLService } from '../acl/acl.service';
-import { ActivityAction, NotificationType, PermissionType, ResourceType } from '@prisma/client';
+import { ActivityAction, NotificationType, PermissionType, Prisma, ResourceType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CompleteFileUploadDTO } from './dtos/complete-file-upload.dto';
 import { CreateFileUploadDTO } from './dtos/create-file-upload.dto';
@@ -216,38 +216,127 @@ export class FileService {
             "Uploaded file size does not match!",
         );
 
-        const updatedVersion = await this.prisma.$transaction(
-            async (tx) => {
-                const updatedVersion =
-                    await tx.fileVersion.update({
-                        where: {
-                            id: fileVersion.id,
-                        },
-                        data: {
-                            isUploaded: true,
-                        },
-                    });
+        const updatedVersion = await this.prisma.$transaction(async (tx) => {
+            const currentVersion = await tx.fileVersion.findUnique({
+                where: { id: fileVersion.id },
+                select: {
+                    id: true,
+                    isUploaded: true,
+                    size: true,
+                    fileId: true,
+                },
+            });
 
-                await tx.physicalBlob.update({
-                    where: {
-                        id: fileVersion.blobId,
-                    },
-                    data: {
-                        refCount: {
-                            increment: 1,
-                        },
-                    },
-                });
+            if (!currentVersion) {
+                throw new NotFoundException("File version is not found!");
+            }
 
-                return updatedVersion;
-            },
-        );
+            if (currentVersion.isUploaded) {
+                return currentVersion;
+            }
+
+            const previousVersion = await tx.fileVersion.findFirst({
+                where: {
+                    fileId: currentVersion.fileId,
+                    isUploaded: true,
+                    versionNumber: {
+                        lt: fileVersion.versionNumber,
+                    },
+                },
+                orderBy: {
+                    versionNumber: "desc",
+                },
+                select: {
+                    size: true,
+                },
+            });
+            const driveId = await this.getFileDriveId(fileVersion.fileId, tx);
+
+            const delta = currentVersion.size - (previousVersion?.size ?? 0n);
+
+            const updated = await tx.fileVersion.update({
+                where: {
+                    id: currentVersion.id,
+                },
+                data: {
+                    isUploaded: true,
+                },
+            });
+
+            await tx.physicalBlob.update({
+                where: {
+                    id: fileVersion.blobId,
+                },
+                data: {
+                    refCount: {
+                        increment: 1,
+                    },
+                },
+            });
+
+            await this.driveService.updateStorageUsage(tx, driveId, delta);
+            return updated;
+        });
 
         return {
             message: "File upload completed successfully!",
             fileVersionId: updatedVersion.id,
             isUploaded: updatedVersion.isUploaded,
         };
+    }
+
+    private async getDriveIdFromFolder(
+        folderId: string,
+        tx: Prisma.TransactionClient = this.prisma,
+    ): Promise<string> {
+        const folder = await tx.folder.findUnique({
+            where: { id: folderId },
+            select: { driveId: true, parentFolderId: true },
+        });
+
+        if (!folder) throw new NotFoundException("Folder not found!");
+
+        if (folder.driveId) {
+            return folder.driveId;
+        }
+
+        if (!folder.parentFolderId) {
+            throw new BadRequestException(
+                "Cannot determine the Drive containing this folder!",
+            );
+        }
+
+        return this.getDriveIdFromFolder(
+            folder.parentFolderId,
+            tx,
+        );
+    }
+
+    private async getFileDriveId(
+        fileId: string,
+        tx: Prisma.TransactionClient = this.prisma,
+    ): Promise<string> {
+        const file = await tx.file.findUnique({
+            where: { id: fileId },
+            select: {
+                driveId: true,
+                folderId: true,
+            },
+        });
+
+        if (!file) {
+            throw new NotFoundException("File not found!");
+        }
+
+        if (file.driveId) {
+            return file.driveId;
+        }
+
+        if (file.folderId) {
+            return this.getDriveIdFromFolder(file.folderId, tx);
+        }
+
+        throw new BadRequestException("File has no valid location!");
     }
 
     async getDriveFiles(userId: string, driveId: string) {

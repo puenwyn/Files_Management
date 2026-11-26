@@ -131,4 +131,12 @@ export class AppConfigService {
     get MINIO_BUCKET(): string {
         return this.configService.getOrThrow<EnvSchemaType['MINIO_BUCKET']>("MINIO_BUCKET");
     }
+
+    get CLAMAV_HOST(): string {
+        return this.configService.getOrThrow<EnvSchemaType['CLAMAV_HOST']>('CLAMAV_HOST');
+    }
+
+    get CLAMAV_PORT(): number {
+        return this.configService.getOrThrow<EnvSchemaType['CLAMAV_PORT']>('CLAMAV_PORT');
+    }
 }
